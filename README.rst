@@ -12,6 +12,7 @@ Abhängikeiten
 
 Es wird das python-modul ``selenium`` benötigt. Falls noch nicht vorhanden,
 kann es über pip nachinstalliert werden.
+::
 
     pip3 install selenium
 
@@ -20,10 +21,40 @@ abhängig ist. Dieser muss mit PATH erreichbar sein (ergo webdriver z.B. unter
 **/usr/bin** ablegen). Weitere Infos dazu gibt es im `selenium-Handbuch <https://selenium-python.readthedocs.io/installation.html#drivers>`_
 
 Firefox-treiber:
+::
     https://github.com/mozilla/geckodriver/releases
 
 Chrome-treiber:
+::
     https://sites.google.com/a/chromium.org/chromedriver/downloads
     
 Benutzung
 ^^^^^^^^^
+
+``wizard-tester`` nimmt die Daten, um einen knoten zu konfigurieren aus einer
+``json``-datei, die beim start als Paramter mit übergeben wird:
+::
+    ./wizard-tester.py node_config.json
+
+
+Format node_config.json
+^^^^^^^^^^^^^^^^^^^^^^^
+Beispieldatei mit allen Werten:
+::
+    {
+        "passwd": "123456",
+        "hostname": "testnode",
+        "nickname": "Nick Name",
+        "realname": "Mr. Real Name",
+        "email": "some@emailaddress.com",
+        "location": "somewhere on planet Earth",
+        "lat": "52.4875104819595",
+        "lon": "13.214267492294312",
+        "sharenet": false,
+        "bandwidth_down": "8",
+        "bandwidth_up": "3",
+        "monitoring": true,
+        "ip_radio0": "172.16.6.2",
+        "ip_radio1": "172.16.6.3",
+        "ip_dhcp": "172.16.5.1/27"
+    }
