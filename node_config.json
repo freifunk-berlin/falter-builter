@@ -1,9 +1,9 @@
 {
-    "passwd": "abc123",
-    "hostname": "testtest",
+    "passwd": "123456",
+    "hostname": "testnode",
     "nickname": "Nick Name",
     "realname": "Mr. Real Name",
-    "email": "berlin@berlin.freifunk.net",
+    "email": "some@emailaddress.com",
     "location": "somewhere on planet Earth",
     "lat": "52.4875104819595",
     "lon": "13.214267492294312",

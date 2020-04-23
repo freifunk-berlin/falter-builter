@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from time import sleep
@@ -11,7 +13,9 @@ luci_timeout_long = 6
 luci_timeout = 2
 
 configs = {}
-with open("node_config.json") as f:
+
+filepath = sys.argv[1]
+with open(filepath) as f:
     configs = json.loads(f.read())
 
 
