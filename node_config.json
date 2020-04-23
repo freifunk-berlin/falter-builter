@@ -1,0 +1,17 @@
+{
+    "passwd": "abc123",
+    "hostname": "testtest",
+    "nickname": "Nick Name",
+    "realname": "Mr. Real Name",
+    "email": "berlin@berlin.freifunk.net",
+    "location": "somewhere on planet Earth",
+    "lat": "52.4875104819595",
+    "lon": "13.214267492294312",
+    "sharenet": false,
+    "bandwidth_down": "8",
+    "bandwidth_up": "3",
+    "monitoring": true,
+    "ip_radio0": "172.16.6.2",
+    "ip_radio1": "172.16.6.3",
+    "ip_dhcp": "172.16.5.1/27"
+}
