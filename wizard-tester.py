@@ -49,6 +49,9 @@ pw_1.send_keys(configs.get("passwd"))
 click_next(browser)
 
 sleep(2)
+# select community
+community = browser.find_element_by_id("cbid.ffwizward.1.net-fuerstenwalde").click()
+
 # put data into fields
 hostname = browser.find_element_by_name("cbid.ffwizward.1.hostname")
 nickname = browser.find_element_by_name("cbid.ffwizward.1.nickname")
@@ -111,6 +114,9 @@ except:
     print("There was no radio1 in LuCI-Wizard. Therefore radio1-IP-Adress not set.")
 
 dhcp.send_keys(configs.get("ip_dhcp"))
+
+# configure mesh mode ad-hoc
+browser.find_element_by_id("cbid.ffwizard.1.mode_radio0-adhoc").click
 
 click_next(browser)
 
