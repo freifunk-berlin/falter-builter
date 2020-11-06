@@ -2,22 +2,112 @@
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+import argparse
+from argparse import RawTextHelpFormatter
 from time import sleep
 import json
 import sys
 
 
 ## config ##
-luci_webadress = "http://frei.funk"
-luci_timeout_long = 6
+luci_webaddress = "http://frei.funk"
+luci_timeout_long = 12
 luci_timeout = 2
 
-configs = {}
+# standard values. They apply, if no other values (via config file or cmd-option) were provided
+configs = {
+    "location": "somewhere in (possibly) Berlin",
+    "lat": "52.4875104819595",
+    "lon": "13.214267492294312",
+    "sharenet_off": False,
+    "download": "12",
+    "upload": "6",
+    "monitoring_off": False
+}
 
-filepath = sys.argv[1]
-with open(filepath) as f:
-    configs = json.loads(f.read())
 
+
+##############################
+#    Argument-paser stuff    #
+##############################
+
+parser = argparse.ArgumentParser(
+    description="""A tool for testing Freifunk-Berlin-Wizard fast and easy.
+It's also very useful, if you want to configure nodes seamlessly quick.
+If you give a value via cmdl-options, they will overide those values from the configuration-file.
+
+If you are in a hurry, you may only provide this information to the script:
+* password
+* hostname
+* your contact (email or web-form)
+* IP for DHCP
+* IP for meshing on radio0
+
+For the rest, the script will insert some standart-values. Have a look in the code.""", formatter_class=RawTextHelpFormatter)
+parser.add_argument(
+    'path', nargs='?', help="path to configuration file in json-format (optional)")
+parser.add_argument('-p', '--passwd', type=str, help="Passwort for user root.")
+parser.add_argument('-n', '--hostname', type=str,
+                    help="hostname of your new freifunk router. Please have a look at RFC1178.")
+parser.add_argument('--nickname', type=str, help="your nickname")
+parser.add_argument('--realname', type=str, help="your real name")
+parser.add_argument('-c', '--contact', type=str,
+                    help="""contact data of the operator. Give an e-mail-address or the link for 
+your personal e-mail-form from config.berlin.freifunk.net""")
+parser.add_argument('--community', type=str, help="select another community-profile than standard")
+parser.add_argument('-l', '--location', type=str,
+                    help="description of routers location (e.g. address)")
+parser.add_argument('-x', '--lat', type=str,
+                    help="latitude of routers position (decimal)")
+parser.add_argument('-y', '--lon', type=str,
+                    help="longintude of routers postition (decimal)")
+parser.add_argument('--sharenet-off', action="store_true",
+                    help="deactivate sharing off your own internet to others")
+parser.add_argument('--upload', type=str,
+                    help="bandwidth-limit for sharing your net")
+parser.add_argument('--download', type=str,
+                    help="bandwidth-limit for sharing your net")
+parser.add_argument('--monitoring-off', action="store_true",
+                    help="deactivate sending statistics to monitor.berlin.freifunk.net")
+parser.add_argument('--adhoc', action="store_true", help="use deprecated ad-hoc as mesh-technology")
+parser.add_argument('-d', '--dhcp', type=str,
+                    help="ip-address of DHCP-Network from the mail.")
+parser.add_argument('-r', '--radio0', type=str,
+                    help="mesh-ip-address for radio0")
+parser.add_argument('-s', '--radio1', type=str,
+                    help="mesh-ip-address for radio1")
+args = parser.parse_args()
+
+
+# read configs from file (if any). If value is not defined in config, preserve standard value.
+if args.path:
+    conf = {}
+    with open(args.path) as f:
+        conf = json.loads(f.read())
+    for option in conf.keys():
+        configs[option] = conf.get(option)
+
+# read commandline arguments into config
+opt = vars(args)
+for option in opt:
+    if option == "path":
+        continue
+    else:
+        if opt.get(option):
+            configs[option] = opt.get(option)
+
+# check, if all mandatory values were given
+mandatory = ["passwd", "hostname", "radio0", "dhcp"]
+for param in mandatory:
+    if not opt.get(param):
+        print("Didn't get enough information for configuring your freifunk-node.\nI need at least:\n\t* passwd\n\t* hostname\n\t* mesh-ip-radio0\n\t* ip-dhcp\n\nThe rest, I'll fill with standard-values.")
+        exit(1)
+
+
+
+##############################
+#    Play around with LuCI   #
+##############################
 
 def click_next(browser):
     button = browser.find_element_by_class_name("cbi-button.cbi-button-save")
@@ -28,13 +118,13 @@ browser = webdriver.Firefox()
 browser.implicitly_wait(1)
 
 # call LuCI-interface and wait unti its loaded
-browser.get(luci_webadress)
+browser.get(luci_webaddress)
 sleep(luci_timeout_long)
 # figure out success via checking pagetitle fo "LuCI"
 try:
-    assert "LuCI" in browser.title, "connecting to "+luci_webadress+" failed!"
+    assert "LuCI" in browser.title, "connecting to "+luci_webaddress+" failed!"
 except:
-    print("connecting to " + luci_webadress + " failed!")
+    print("connecting to " + luci_webaddress + " failed!")
     print("exiting...")
     exit(1)
 
@@ -49,14 +139,17 @@ pw_1.send_keys(configs.get("passwd"))
 click_next(browser)
 
 sleep(2)
+
 # select community
-community = browser.find_element_by_id("cbid.ffwizward.1.net-fuerstenwalde").click()
+if args.community:
+    id_string = "cbid.ffwizward.1.net-" + args.community
+    community = browser.find_element_by_id("cbid.ffwizward.1.net-fuerstenwalde").click()
 
 # put data into fields
 hostname = browser.find_element_by_name("cbid.ffwizward.1.hostname")
 nickname = browser.find_element_by_name("cbid.ffwizward.1.nickname")
 realname = browser.find_element_by_name("cbid.ffwizward.1.realname")
-email = browser.find_element_by_name("cbid.ffwizward.1.mail")
+contact = browser.find_element_by_name("cbid.ffwizward.1.mail")
 location = browser.find_element_by_name("cbid.ffwizward.1.location")
 lat = browser.find_element_by_name("cbid.ffwizward.1.lat")
 lon = browser.find_element_by_name("cbid.ffwizward.1.lon")
@@ -65,7 +158,7 @@ hostname.clear()
 hostname.send_keys(configs.get("hostname"))
 nickname.send_keys(configs.get("nickname"))
 realname.send_keys(configs.get("realname"))
-email.send_keys(configs.get("email"))
+contact.send_keys(configs.get("contact"))
 location.send_keys(configs.get("location"))
 lat.send_keys(configs.get("lat"))
 lon.send_keys(configs.get("lon"))
@@ -73,7 +166,7 @@ lon.send_keys(configs.get("lon"))
 click_next(browser)
 
 # decide on dsl yes/no
-if configs.get("sharenet") == False:  # sys.argv[1] == "-m":
+if configs.get("sharenet_off"):
     # click "Am Freifunknetz teilnehmen"
     browser.find_element_by_link_text("Am Freifunk-Netz teilnehmen").click()
 
@@ -88,13 +181,13 @@ else:
     bw_up = browser.find_element_by_name(
         "cbid.ffuplink.1.usersBandwidthUp")
 
-    bw_down.send_keys(configs.get("bandwidth_down"))
-    bw_up.send_keys(configs.get("bandwidth_up"))
+    bw_down.send_keys(configs.get("download"))
+    bw_up.send_keys(configs.get("upload"))
 
     click_next(browser)
 
 # monitoring yes/no
-if configs.get("monitoring") == True:
+if not configs.get("monitoring_off"):
     elem = browser.find_element_by_name("cbid.ffwizard.1.stats")
     elem.click()
 
@@ -105,18 +198,19 @@ sleep(2)
 radio0 = browser.find_element_by_name("cbid.ffwizard.1.meship_radio0")
 dhcp = browser.find_element_by_name("cbid.ffwizard.1.dhcpmesh")
 
-radio0.send_keys(configs.get("ip_radio0"))
+radio0.send_keys(configs.get("radio0"))
 # radio1 is not present on all routers
 try:
     radio1 = browser.find_element_by_name("cbid.ffwizard.1.meship_radio1")
-    radio1.send_keys(configs.get("ip_radio1"))
+    radio1.send_keys(configs.get("radio1"))
 except:
     print("There was no radio1 in LuCI-Wizard. Therefore radio1-IP-Adress not set.")
 
-dhcp.send_keys(configs.get("ip_dhcp"))
+dhcp.send_keys(configs.get("dhcp"))
 
 # configure mesh mode ad-hoc
-browser.find_element_by_id("cbid.ffwizard.1.mode_radio0-adhoc").click
+if args.adhoc:
+    browser.find_element_by_id("cbid.ffwizard.1.mode_radio0-adhoc").click
 
 click_next(browser)
 
