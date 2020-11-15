@@ -79,14 +79,46 @@ mkdir -p build
 rm -rf build/*
 cd build
 
-for release in $RELEASES; do
-    for target in $(fetch_subdirs $release); do
-        for subtarget in $(fetch_subdirs $release$target); do
-	    imagebuilder=$(fetch_subdirs $release$target$subtarget | grep imagebuilder)
-	    start_build $release$target$subtarget$imagebuilder  
-        done
-    done
-done
+
+# read command-line parameters
+if [ $# -gt 0 ]; then
+	CONF_RELEASE="$1"
+	CONF_TARGET="$2"
+fi
+
+
+if [ -z "$CONF_RELEASE" ] && [ -z "$CONF_TARGET" ]; then
+	# build all targets for all releases
+	for release in $RELEASES; do
+	    for target in $(fetch_subdirs $release); do
+	        for subtarget in $(fetch_subdirs $release$target); do
+		    imagebuilder=$(fetch_subdirs $release$target$subtarget | grep imagebuilder)
+		    start_build $release$target$subtarget$imagebuilder
+	        done
+	    done
+	done
+	exit
+elif [ -z "$CONF_TARGET" ]; then
+	# build one release for all targets
+	# fetch release-link. in case there is more than one, fetch recent release.
+	RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
+	for target in $(fetch_subdirs "$RELEASE_LINK"); do
+		for subtarget in $(fetch_subdirs $RELEASE_LINK$target); do
+			imagebuilder=$(fetch_subdirs $RELEASE_LINK$target$subtarget | grep imagebuilder)
+		    start_build $RELEASE_LINK$target$subtarget$imagebuilder
+	    done
+	done
+	exit
+else
+	# there was given a release and a target
+	RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
+	echo $(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/")
+		for subtarget in $(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/"); do
+			imagebuilder=$(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/$subtarget" | grep imagebuilder)
+		    start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder"
+	    done
+	exit
+fi
 
 
 
