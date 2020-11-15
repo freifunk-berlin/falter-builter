@@ -7,14 +7,9 @@ RELEASES="
 
 FALTER_REPO_BASE="src/gz openwrt_falter http://download-master.berlin.freifunk.net/falter-feed"
 
-PACKAGE_SET="mtr tcpdump"
-PACKAGE_SET+=" luci-ssl"
-PACKAGE_SET+=" luci-app-statistics collectd-mod-uptime collectd-mod-ping collectd-mod-olsrd collectd-mod-exec"
-PACKAGE_SET+=" olsrd olsrd-mod-arprefresh olsrd-mod-dyn-gw olsrd-mod-jsoninfo olsrd-mod-nameservice olsrd-mod-txtinfo olsrd-mod-watchdog"
-PACKAGE_SET+=" luci-app-olsr luci-app-olsr-services"
-PACKAGE_SET+=" luci-mod-falter falter-berlin-fix-luci"
-PACKAGE_SET+=" luci-app-falter-owm luci-app-falter-owm-ant luci-app-falter-owm-cmd luci-app-falter-owm-gui"
-PACKAGE_SET+=" -ppp -ppp-mod-pppoe"
+# read packageset, while removing comments, empty lines and newlines
+PACKAGE_SET=$(cat $1 | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
+shift
 
 
 function fetch_subdirs {
