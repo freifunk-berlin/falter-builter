@@ -1,0 +1,92 @@
+#!/bin/bash
+
+
+RELEASES="
+    https://downloads.openwrt.org/releases/19.07.4/targets/
+    https://downloads.openwrt.org/snapshots/targets/"
+
+FALTER_REPO_BASE="src/gz openwrt_falter http://download-master.berlin.freifunk.net/falter-feed"
+
+PACKAGE_SET="mtr tcpdump"
+PACKAGE_SET+=" luci-ssl"
+PACKAGE_SET+=" luci-app-statistics collectd-mod-uptime collectd-mod-ping collectd-mod-olsrd collectd-mod-exec"
+PACKAGE_SET+=" olsrd olsrd-mod-arprefresh olsrd-mod-dyn-gw olsrd-mod-jsoninfo olsrd-mod-nameservice olsrd-mod-txtinfo olsrd-mod-watchdog"
+PACKAGE_SET+=" luci-app-olsr luci-app-olsr-services"
+PACKAGE_SET+=" luci-mod-falter falter-berlin-fix-luci"
+PACKAGE_SET+=" luci-app-falter-owm luci-app-falter-owm-ant luci-app-falter-owm-cmd luci-app-falter-owm-gui"
+PACKAGE_SET+=" -ppp -ppp-mod-pppoe"
+
+
+function fetch_subdirs {
+    URL=$1
+    curl -s $URL | grep href | grep -v 'snapshots\|releases' | awk -F'"' '{print $4}'
+}
+
+function derive_branch_from_url {
+    URL=$1
+    RELEASE_TYPE=$(echo $URL | awk -F'/' '{print $4}')
+    case $RELEASE_TYPE in
+      releases)
+        echo $URL | awk -F'/' '{print $5}' | cut -d. -f1-2
+      ;;
+      snapshots)
+        echo snapshot
+      ;;
+    esac
+}
+
+function start_build {
+    IMAGE_BUILDER_URL=$1
+    FILENAME=$(basename $IMAGE_BUILDER_URL)
+    FOLDERNAME=$(basename $FILENAME .tar.xz)
+    BRANCH=$(derive_branch_from_url $IMAGE_BUILDER_URL)
+    echo "building using: $IMAGE_BUILDER_URL"
+    echo "selected branch: $BRANCH"
+
+    wget $IMAGE_BUILDER_URL
+    tar -xJf $FILENAME
+    rm -f $FILENAME
+    
+    cd $FOLDERNAME
+
+    case $BRANCH in
+      snapshot)
+        ispos=7
+	;;
+      *)
+        ispos=8
+	;;
+    esac
+
+    INSTR_SET=$(grep "openwrt_base" repositories.conf | awk -F'/' "{print \$$ispos}")
+    echo "selected instruction set: $INSTR_SET"
+
+    #REPO="$FALTER_REPO_BASE/$BRANCH/$INSTR_SET"
+    REPO="$FALTER_REPO_BASE/19.07.4/packages/$INSTR_SET/falter"
+    echo "injecting repo line: $REPO"
+    echo "$REPO" >> repositories.conf
+
+    for profile in $(make info | grep ":$" | grep "Default" -A1000 | cut -d: -f1 | grep -v "Default"); do
+        echo "start building $profile..."
+	make image PROFILE="$profile" PACKAGES="$PACKAGE_SET"
+	echo "finished"
+    done
+
+    cd ..
+}
+
+mkdir -p build
+rm -rf build/*
+cd build
+
+for release in $RELEASES; do
+    for target in $(fetch_subdirs $release); do
+        for subtarget in $(fetch_subdirs $release$target); do
+	    imagebuilder=$(fetch_subdirs $release$target$subtarget | grep imagebuilder)
+	    start_build $release$target$subtarget$imagebuilder  
+        done
+    done
+done
+
+
+
