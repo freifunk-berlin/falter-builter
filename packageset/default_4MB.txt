@@ -1,0 +1,51 @@
+-kmod-usb-core
+-kmod-usb2
+-kmod-ledtrig-usbdev
+-kmod-usb-ohci
+-kmod-ppp
+-kmod-usb-serial
+-ppp
+-ppp-mod-pppoe
+#-wpad
+-opkg
+-usign
+
+# Defaults
+falter-berlin-dhcp-defaults
+falter-berlin-firewall-defaults
+falter-berlin-freifunk-defaults
+falter-berlin-migration
+falter-berlin-network-defaults
+falter-berlin-olsrd-defaults
+falter-berlin-system-defaults
+falter-profiles
+
+# Common
+#dnsmasq is already provided via dnsmasq-full
+-dnsmasq
+qos-scripts
+firewall
+iwinfo
+libiwinfo-lua
+
+# GUI
+uhttpd
+uhttpd-mod-ubus
+luci-app-ffwizard-falter
+luci-mod-falter
+luci-app-olsr
+luci-app-olsr-services
+luci-app-falter-owm
+luci-app-falter-owm-cmd
+luci-theme-bootstrap
+
+# OLSR
+olsrd
+olsrd-mod-arprefresh
+olsrd-mod-dyn-gw
+olsrd-mod-jsoninfo
+olsrd-mod-nameservice
+kmod-ipip
+
+# Uplink
+falter-berlin-uplink-notunnel
