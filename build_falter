@@ -30,6 +30,15 @@ function derive_branch_from_url {
     esac
 }
 
+function generate_embedded_files {
+    # call scripts to generate dynamic data in embedded files
+    local RELEASE=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 5)
+    local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
+    local SUBTARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 8)
+    ../../scripts/01-generate_banner.sh $RELEASE $TARGET $SUBTARGET
+    ../../scripts/02-uci-set-version.sh $RELEASE
+}
+
 function start_build {
     IMAGE_BUILDER_URL=$1
     FILENAME=$(basename $IMAGE_BUILDER_URL)
@@ -61,10 +70,11 @@ function start_build {
     echo "injecting repo line: $REPO"
     echo "$REPO" >> repositories.conf
 
+    generate_embedded_files $IMAGE_BUILDER_URL
     for profile in $(make info | grep ":$" | grep "Default" -A1000 | cut -d: -f1 | grep -v "Default"); do
         echo "start building $profile..."
-	make image PROFILE="$profile" PACKAGES="$PACKAGE_SET"
-	echo "finished"
+        make image PROFILE="$profile" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
+        echo "finished"
     done
     # move binaries into central firmware-dir
     rsync -a --remove-source-files bin/targets/* ../../firmwares/
