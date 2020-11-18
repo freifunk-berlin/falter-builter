@@ -66,10 +66,15 @@ function start_build {
 	make image PROFILE="$profile" PACKAGES="$PACKAGE_SET"
 	echo "finished"
     done
+    # move binaries into central firmware-dir
+    rsync -a --remove-source-files bin/targets/* ../../firmwares/
 
     cd ..
 }
 
+# remove artifacts of last build
+mkdir -p firmwares
+rm -rf firmwares/*
 mkdir -p build
 rm -rf build/*
 cd build
