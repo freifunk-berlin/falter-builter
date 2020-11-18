@@ -57,7 +57,7 @@ function start_build {
     echo "selected instruction set: $INSTR_SET"
 
     #REPO="$FALTER_REPO_BASE/$BRANCH/$INSTR_SET"
-    REPO="$FALTER_REPO_BASE/19.07.4/packages/$INSTR_SET/falter"
+    REPO="$FALTER_REPO_BASE/19.07/packages/$INSTR_SET/falter"
     echo "injecting repo line: $REPO"
     echo "$REPO" >> repositories.conf
 
