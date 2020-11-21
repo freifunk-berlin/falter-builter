@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# get some build-config
+source buildconfig.conf
 
 RELEASES="
     https://downloads.openwrt.org/releases/19.07.4/targets/
@@ -32,11 +34,10 @@ function derive_branch_from_url {
 
 function generate_embedded_files {
     # call scripts to generate dynamic data in embedded files
-    local RELEASE=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 5)
     local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
     local SUBTARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 8)
-    ../../scripts/01-generate_banner.sh $RELEASE $TARGET $SUBTARGET
-    ../../scripts/02-uci-set-version.sh $RELEASE
+    ../../scripts/01-generate_banner.sh $VERSION $NICKNAME $TARGET $SUBTARGET
+    ../../scripts/02-generate-release-file.sh $VERSION
 }
 
 function start_build {
@@ -66,7 +67,7 @@ function start_build {
     echo "selected instruction set: $INSTR_SET"
 
     #REPO="$FALTER_REPO_BASE/$BRANCH/$INSTR_SET"
-    REPO="$FALTER_REPO_BASE/19.07/packages/$INSTR_SET/falter"
+    REPO="$FALTER_REPO_BASE/19.07/$INSTR_SET/falter"
     echo "injecting repo line: $REPO"
     echo "$REPO" >> repositories.conf
 
