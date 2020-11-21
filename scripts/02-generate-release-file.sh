@@ -5,13 +5,6 @@ SCRIPTPATH=$(dirname $(readlink -f "$0"))
 mkdir -p "$SCRIPTPATH/../embedded-files/etc/uci-defaults/"
 
 printf \
-"#!/bin/sh
+"FREIFUNK_RELEASE='$VERSION'
 
-uci set system.@system[0].version='$VERSION'
-if [ $? != '0' ] ; then
-	exit 1
-else 
-	exit 0
-fi
-
-" > "$SCRIPTPATH/../embedded-files/etc/uci-defaults/099-set-freifunk-version.sh"
+" > "$SCRIPTPATH/../embedded-files/etc/freifunk_release"
