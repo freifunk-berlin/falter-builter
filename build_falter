@@ -100,6 +100,7 @@ cd build
 if [ $# -gt 0 ]; then
 	CONF_RELEASE="$1"
 	CONF_TARGET="$2"
+	CONF_SUBTARGET="$3"
 fi
 
 
@@ -128,13 +129,18 @@ elif [ -z "$CONF_TARGET" ]; then
 else
 	# there was given a release and a target
 	RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
-	echo $(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/")
+	# if there was defined a subtarget, only build that.
+	if [ -n "$CONF_SUBTARGET" ]; then
+		# build directly that subtarget
+		TARGET_LIST="$RELEASE_LINK$CONF_TARGET/$CONF_SUBTARGET/"
+		IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
+		start_build "$TARGET_LIST$IMAGEBUILDER"
+		exit
+	fi
+	# otherwise, fetch all subtargets and build them one after another.
 		for subtarget in $(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/"); do
 			imagebuilder=$(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/$subtarget" | grep imagebuilder)
 		    start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder"
 	    done
 	exit
 fi
-
-
-
