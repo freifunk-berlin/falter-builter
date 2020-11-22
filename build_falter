@@ -72,7 +72,11 @@ function start_build {
     echo "injecting repo line: $REPO"
     echo "$REPO" >> repositories.conf
 
-    generate_embedded_files $IMAGE_BUILDER_URL
+    echo "loading package-feed key..."
+    local URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f3)
+    curl "$URL/key-build.pub" > keys/3169149e744f86a1
+
+    generate_embedded_files
     for profile in $(make info | grep ":$" | grep "Default" -A1000 | cut -d: -f1 | grep -v "Default"); do
         echo "start building $profile..."
         make image PROFILE="$profile" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
