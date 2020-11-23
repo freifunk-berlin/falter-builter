@@ -78,7 +78,7 @@ function start_build {
 
     generate_embedded_files
     if [ -z $2 ]; then
-      for profile in $(make info | grep ":$" | grep "Default" -A1000 | cut -d: -f1 | grep -v "Default"); do
+      for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
           echo "start building $profile..."
           make image PROFILE="$profile" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
           echo "finished"
