@@ -5,6 +5,7 @@
 
 # Defaults
 falter-berlin-dhcp-defaults
+falter-berlin-fix-luci
 falter-berlin-freifunk-defaults
 falter-berlin-network-defaults
 falter-berlin-olsrd-defaults
@@ -15,6 +16,10 @@ falter-berlin-uhttpd-defaults
 # Common
 #dnsmasq is already provided via dnsmasq-full
 -dnsmasq
+
+# falter Common
+falter-common
+falter-common-olsr
 
 # Utils
 tcpdump
