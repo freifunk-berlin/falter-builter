@@ -36,6 +36,10 @@ function generate_embedded_files {
     # call scripts to generate dynamic data in embedded files
     local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
     local SUBTARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 8)
+    #if Version-string is not empty, concatenate it with VERSION
+    if [ $VERSIONSTR ]; then
+      VERSION+="-$VERSIONSTR"
+    fi
     ../../scripts/01-generate_banner.sh $VERSION $NICKNAME $TARGET $SUBTARGET
     ../../scripts/02-generate-release-file.sh $VERSION
     ../../scripts/03-luci-footer.sh $VERSION $NICKNAME $TARGET $SUBTARGET
