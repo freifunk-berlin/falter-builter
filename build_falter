@@ -77,11 +77,16 @@ function start_build {
     curl "$URL/key-build.pub" > keys/3169149e744f86a1
 
     generate_embedded_files
-    for profile in $(make info | grep ":$" | grep "Default" -A1000 | cut -d: -f1 | grep -v "Default"); do
-        echo "start building $profile..."
-        make image PROFILE="$profile" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
-        echo "finished"
-    done
+    if [ -z $2 ]; then
+      for profile in $(make info | grep ":$" | grep "Default" -A1000 | cut -d: -f1 | grep -v "Default"); do
+          echo "start building $profile..."
+          make image PROFILE="$profile" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
+          echo "finished"
+      done
+    else
+      echo "start building $2..."
+      make image PROFILE="$2" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
+    fi
     # move binaries into central firmware-dir
     rsync -a --remove-source-files bin/targets/* ../../firmwares/
 
@@ -101,6 +106,7 @@ if [ $# -gt 0 ]; then
 	CONF_RELEASE="$1"
 	CONF_TARGET="$2"
 	CONF_SUBTARGET="$3"
+	CONF_DEVICE="$4"
 fi
 
 
@@ -129,12 +135,12 @@ elif [ -z "$CONF_TARGET" ]; then
 else
 	# there was given a release and a target
 	RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
-	# if there was defined a subtarget, only build that.
+	# if there was defined a subtarget and option device, only build that.
 	if [ -n "$CONF_SUBTARGET" ]; then
 		# build directly that subtarget
 		TARGET_LIST="$RELEASE_LINK$CONF_TARGET/$CONF_SUBTARGET/"
 		IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
-		start_build "$TARGET_LIST$IMAGEBUILDER"
+		start_build "$TARGET_LIST$IMAGEBUILDER" $CONF_DEVICE
 		exit
 	fi
 	# otherwise, fetch all subtargets and build them one after another.
