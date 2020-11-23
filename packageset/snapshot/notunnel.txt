@@ -34,6 +34,8 @@ falter-common
 falter-common-olsr
 falter-policyrouting
 falter-profiles
+# allow upgrade from one type to another
+falter-berlin-tunneldigger
 
 # GUI-basics
 uhttpd
