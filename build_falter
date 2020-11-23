@@ -72,8 +72,8 @@ function start_build {
     echo "injecting repo line: $REPO"
     echo "$REPO" >> repositories.conf
 
-    echo "loading package-feed key..."
     local URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f3)
+    echo "loading package-feed key from $URL/key-build.pub"
     curl "$URL/key-build.pub" > keys/3169149e744f86a1
 
     generate_embedded_files
