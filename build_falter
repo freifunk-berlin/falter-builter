@@ -9,10 +9,12 @@ RELEASES="
 
 FALTER_REPO_BASE="src/gz openwrt_falter http://download-master.berlin.freifunk.net/falter-feed"
 
-# read packageset, while removing comments, empty lines and newlines
-PACKAGE_SET=$(cat $1 | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
-shift
 
+function read_packageset {
+	local PACKAGE_SET_PATH=$1
+	# read packageset, while removing comments, empty lines and newlines
+	PACKAGE_SET=$(cat $PACKAGE_SET_PATH | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
+}
 
 function fetch_subdirs {
     URL=$1
@@ -50,15 +52,22 @@ function generate_embedded_files {
 
 function start_build {
     IMAGE_BUILDER_URL=$1
+    local TMP=$2 # slice packageset-name from path
+    local PKG_SET=$(echo $TMP | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
+    local DEVICE=$3
     FILENAME=$(basename $IMAGE_BUILDER_URL)
     FOLDERNAME=$(basename $FILENAME .tar.xz)
     BRANCH=$(derive_branch_from_url $IMAGE_BUILDER_URL)
     echo "building using: $IMAGE_BUILDER_URL"
     echo "selected branch: $BRANCH"
 
-    wget $IMAGE_BUILDER_URL
+    # only download imagebuilder, if we didn't have it from previous packagelist-build
+    echo $PWD
+    if [ ! -f $FILENAME ]; then
+		wget $IMAGE_BUILDER_URL
+    fi
+    rm -rf $FOLDERNAME
     tar -xJf $FILENAME
-    rm -f $FILENAME
     
     cd $FOLDERNAME
 
@@ -84,21 +93,44 @@ function start_build {
     curl "$URL/key-build.pub" > keys/3169149e744f86a1
 
     generate_embedded_files $BRANCH
-    if [ -z $2 ]; then
+    if [ -z $DEVICE ]; then
       for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
           echo "start building $profile..."
           make image PROFILE="$profile" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
           echo "finished"
       done
     else
-      echo "start building $2..."
-      make image PROFILE="$2" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
+      echo "start building $DEVICE..."
+      make image PROFILE="$DEVICE" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
     fi
-    # move binaries into central firmware-dir
-    rsync -a --remove-source-files bin/targets/* ../../firmwares/
+    # move binaries into central firmware-dir, sort them for packagesets, there was given one.
+    if [ $PKG_SET ]; then
+		rsync -a --remove-source-files bin/targets/* ../../firmwares/$PKG_SET/
+    else
+		rsync -a --remove-source-files bin/targets/* ../../firmwares/
+    fi
 
     cd ..
 }
+
+
+##############
+#    MAIN    #
+##############
+
+if [ "$1" == "all" ]; then
+	# build all imageflavours. For this, get paths of packagesets
+	VER=$2
+	# fetch paths of packagelists (depends on openwrt-version). If not unique, chose most recent version of possibilities.
+	PSET_PATHS=$(find packageset | sort | grep -e "/$VER" | grep .txt | tail -n3)
+	echo $PSET_PATHS
+	#exit
+else
+	read_packageset "$1"
+fi
+# shift packagelist-arg away.
+shift
+
 
 # remove artifacts of last build
 mkdir -p firmwares
@@ -144,16 +176,34 @@ else
 	RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
 	# if there was defined a subtarget and option device, only build that.
 	if [ -n "$CONF_SUBTARGET" ]; then
-		# build directly that subtarget
+		# build directly that subtarget. if requested, for all image types.
 		TARGET_LIST="$RELEASE_LINK$CONF_TARGET/$CONF_SUBTARGET/"
 		IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
-		start_build "$TARGET_LIST$IMAGEBUILDER" $CONF_DEVICE
+		if [ "$PSET_PATHS" ]; then
+			for PKG_SET in $PSET_PATHS; do
+				echo "BUILDING 3 PACKAGELISTS"
+				read_packageset "../$PKG_SET"
+				start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $CONF_DEVICE
+			done
+		else
+			echo "BUILDING 1 PACKAGLIST"
+			start_build "$TARGET_LIST$IMAGEBUILDER" targets $CONF_DEVICE
+		fi
 		exit
 	fi
 	# otherwise, fetch all subtargets and build them one after another.
 		for subtarget in $(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/"); do
 			imagebuilder=$(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/$subtarget" | grep imagebuilder)
-		    start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder"
+			if [ "$PSET_PATHS" ]; then
+				for PKG_SET in $PSET_PATHS; do
+					echo "BUILDING 3 PACKAGELISTS"
+					read_packageset "../$PKG_SET"
+					start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder" $PKG_SET
+				done
+		    else
+				echo "BUILDING 1 PACKAGLIST"
+				start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder"
+		    fi
 	    done
 	exit
 fi
