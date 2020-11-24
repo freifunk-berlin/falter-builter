@@ -40,8 +40,7 @@ falter-berlin-tunneldigger
 # GUI-basics
 uhttpd
 uhttpd-mod-ubus
-px5g-mbedtls
-libustream-mbedtls
+luci-ssl
 luci-app-ffwizard-falter
 luci-mod-falter
 luci-app-olsr
