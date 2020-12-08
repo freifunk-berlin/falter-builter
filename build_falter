@@ -33,15 +33,19 @@ function derive_branch_from_url {
 }
 
 function generate_embedded_files {
+
+    FALTERBRANCH="$1"
     # call scripts to generate dynamic data in embedded files
     local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
     local SUBTARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 8)
-    #if Version-string is not empty, concatenate it with VERSION
-    if [ $VERSIONSTR ]; then
-      VERSION+="-$VERSIONSTR"
-    fi
-    ../../scripts/01-generate_banner.sh $VERSION $NICKNAME $TARGET $SUBTARGET
-    ../../scripts/03-luci-footer.sh $VERSION $NICKNAME $TARGET $SUBTARGET
+
+    # Get the FREIFUNK_RELEASE variable from the falter/packages repo
+    # located in the falter-common package.
+    [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
+    eval $(curl https://raw.githubusercontent.com/Freifunk-Spalter/packages/${FALTERBRANCH}/packages/falter-common/files-common/etc/freifunk_release)
+
+    ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET
+    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET
 }
 
 function start_build {
@@ -79,7 +83,7 @@ function start_build {
     echo "loading package-feed key from $URL/key-build.pub"
     curl "$URL/key-build.pub" > keys/3169149e744f86a1
 
-    generate_embedded_files
+    generate_embedded_files $BRANCH
     if [ -z $2 ]; then
       for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
           echo "start building $profile..."
