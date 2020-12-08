@@ -45,7 +45,7 @@ function generate_embedded_files {
     eval $(curl https://raw.githubusercontent.com/Freifunk-Spalter/packages/${FALTERBRANCH}/packages/falter-common/files-common/etc/freifunk_release)
 
     ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET
-    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET
+    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_OPENWRT_BASE
 }
 
 function start_build {
