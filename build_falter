@@ -35,7 +35,6 @@ function derive_branch_from_url {
 }
 
 function generate_embedded_files {
-
     FALTERBRANCH="$1"
     # call scripts to generate dynamic data in embedded files
     local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
@@ -44,7 +43,9 @@ function generate_embedded_files {
     # Get the FREIFUNK_RELEASE variable from the falter/packages repo
     # located in the falter-common package.
     [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
-    eval $(curl https://raw.githubusercontent.com/Freifunk-Spalter/packages/${FALTERBRANCH}/packages/falter-common/files-common/etc/freifunk_release)
+    [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$FALTERBRANCH"
+    local TMP=$(curl -q https://raw.githubusercontent.com/Freifunk-Spalter/packages/$FALTERBRANCH/packages/falter-common/files-common/etc/freifunk_release)
+    eval $TMP
 
     ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET
     ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_OPENWRT_BASE
