@@ -5,6 +5,7 @@ source buildconfig.conf
 
 RELEASES="
     https://downloads.openwrt.org/releases/19.07.4/targets/
+    https://downloads.openwrt.org/releases/19.07.5/targets/
     https://downloads.openwrt.org/snapshots/targets/"
 
 FALTER_REPO_BASE="src/gz openwrt_falter http://download-master.berlin.freifunk.net/falter-feed"
