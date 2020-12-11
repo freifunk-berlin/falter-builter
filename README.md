@@ -2,7 +2,7 @@
 
 This script packages falter-firmware from openwrt-imagebuilder and falter-feed. In comparison to the old buildsystem, thats almost insanely fast.
 
-## utilisation
+## Utilisation
 
 The script takes five positional arguments.
 
@@ -22,16 +22,16 @@ If you like to build only one specific router-profile, you *must* give all the a
 After the buildprocess finished, you will find the images in `firmwares/`.
 
 
-## build your own image
+## Quickstart: build your own image
 
 Lets assume you'd like to build a stable-release-tunneldigger-image for your GL-AR150 router. To achieve
 that, you should invoke the buildscript in that way:
 
 ```
-./build_falter packageset/tunneldigger.txt 19.07 ath79 generic glinet_gl-ar150
+./build_falter packageset/19.07/tunneldigger.txt 19.07 ath79 generic glinet_gl-ar150
 ```
 
-## use builter with buildbot
+## Use builter with buildbot
 
 For the image generation with buildbot, builter should be invoked like this:
 ```
