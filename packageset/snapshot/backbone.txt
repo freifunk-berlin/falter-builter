@@ -69,6 +69,7 @@ batctl-full
 # Statistics
 luci-app-statistics
 collectd
+collectd-mod-dhcpleases
 collectd-mod-interface
 collectd-mod-iwinfo
 collectd-mod-network

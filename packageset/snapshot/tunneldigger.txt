@@ -83,6 +83,7 @@ falter-berlin-uplink-tunnelberlin
 luci-app-statistics
 collectd
 collectd-mod-cpu
+collectd-mod-dhcpleases
 collectd-mod-interface
 collectd-mod-iwinfo
 collectd-mod-load
