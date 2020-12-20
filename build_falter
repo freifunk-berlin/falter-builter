@@ -72,6 +72,8 @@ function start_build {
     
     cd $FOLDERNAME
 
+    local is_small_flash=$(grep -Fxq "CONFIG_SMALL_FLASH=y" .config)
+
     case $BRANCH in
       snapshot)
         ispos=7
