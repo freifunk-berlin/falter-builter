@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#set -e
+
 # get some build-config
 source buildconfig.conf
 
@@ -8,7 +10,7 @@ RELEASES="
     https://downloads.openwrt.org/releases/19.07.6/targets/
     https://downloads.openwrt.org/snapshots/targets/"
 
-FALTER_REPO_BASE="src/gz openwrt_falter http://download-master.berlin.freifunk.net/falter-feed"
+FALTER_REPO_BASE="src/gz openwrt_falter http://buildbot.berlin.freifunk.net/buildbot/feed/openwrt-19.07"
 
 FREIFUNK_RELEASE=""
 
@@ -89,14 +91,15 @@ function start_build {
     INSTR_SET=$(grep "openwrt_base" repositories.conf | awk -F'/' "{print \$$ispos}")
     echo "selected instruction set: $INSTR_SET"
 
-    #REPO="$FALTER_REPO_BASE/$BRANCH/$INSTR_SET"
-    REPO="$FALTER_REPO_BASE/19.07/$INSTR_SET/falter"
+    #REPO="$FALTER_REPO_BASE/19.07/$INSTR_SET/falter"
+    REPO="$FALTER_REPO_BASE/packages/$INSTR_SET/falter"
     echo "injecting repo line: $REPO"
     echo "$REPO" >> repositories.conf
 
-    local URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f3)
-    echo "loading package-feed key from $URL/key-build.pub"
-    curl "$URL/key-build.pub" > keys/3169149e744f86a1
+    #local URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f3)
+    #echo "loading package-feed key from $URL/key-build.pub"
+    #curl "$URL/key-build.pub" > keys/3169149e744f86a1
+    #curl "http://buildbot.berlin.freifunk.net/buildbot/feed/packagefeed_master.pub" > keys/3169149e744f86a1
 
     generate_embedded_files $BRANCH
     if [ -z $DEVICE ]; then
