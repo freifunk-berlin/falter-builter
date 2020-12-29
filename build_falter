@@ -1,6 +1,8 @@
 #!/bin/bash
 
-#set -e
+# do not use 'set -e'. It will abort a whole build if, i.e. the
+# memory of a single 4MB-Device exceeds.
+# set -e
 
 # get some build-config
 source buildconfig.conf
@@ -76,7 +78,7 @@ function start_build {
     # only download imagebuilder, if we didn't have it from previous packagelist-build
     echo $PWD
     if [ ! -f $FILENAME ]; then
-		wget $IMAGE_BUILDER_URL
+      wget $IMAGE_BUILDER_URL
     fi
     rm -rf $FOLDERNAME
     tar -xJf $FILENAME
@@ -97,7 +99,6 @@ function start_build {
     INSTR_SET=$(grep "openwrt_base" repositories.conf | awk -F'/' "{print \$$ispos}")
     echo "selected instruction set: $INSTR_SET"
 
-    #REPO="$FALTER_REPO_BASE/19.07/$INSTR_SET/falter"
     REPO="$FALTER_REPO_BASE/packages/$INSTR_SET/falter"
     echo "injecting repo line: $REPO"
     echo "$REPO" >> repositories.conf
