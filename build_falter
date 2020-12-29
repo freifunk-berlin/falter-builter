@@ -98,10 +98,10 @@ function start_build {
     echo "injecting repo line: $REPO"
     echo "$REPO" >> repositories.conf
 
-    #local URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f3)
-    #echo "loading package-feed key from $URL/key-build.pub"
-    #curl "$URL/key-build.pub" > keys/3169149e744f86a1
-    #curl "http://buildbot.berlin.freifunk.net/buildbot/feed/packagefeed_master.pub" > keys/3169149e744f86a1
+    # the hexadecimal number represents the fringerprint of the key. Refer to third section of https://openwrt.org/docs/guide-user/security/keygen#generate_usign_key_pair
+    local URL="http://buildbot.berlin.freifunk.net/buildbot/feed/packagefeed_master.pub"
+    echo "loading package-feed key from $URL"
+    curl "$URL" > keys/61a078a38408e710
 
     generate_embedded_files $BRANCH
     if [ -z $DEVICE ]; then
