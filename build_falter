@@ -10,7 +10,11 @@ RELEASES="
     https://downloads.openwrt.org/releases/19.07.6/targets/
     https://downloads.openwrt.org/snapshots/targets/"
 
-FALTER_REPO_BASE="src/gz openwrt_falter http://buildbot.berlin.freifunk.net/buildbot/feed/openwrt-19.07"
+if [[ "$2" =~ 19.07 ]]; then # regex-matching. Not portable to sh!
+  FALTER_REPO_BASE="src/gz openwrt_falter http://buildbot.berlin.freifunk.net/buildbot/feed/openwrt-19.07"
+else
+  FALTER_REPO_BASE="src/gz openwrt_falter http://buildbot.berlin.freifunk.net/buildbot/feed/master"
+fi
 
 FREIFUNK_RELEASE=""
 
