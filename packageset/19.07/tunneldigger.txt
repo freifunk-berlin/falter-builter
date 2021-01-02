@@ -1,5 +1,3 @@
--ppp
--ppp-mod-pppoe
 #-wpad-mini
 #wpad
 
@@ -53,6 +51,7 @@ luci-app-falter-owm
 luci-app-falter-owm-ant
 luci-app-falter-owm-cmd
 luci-app-falter-owm-gui
+luci-proto-ppp
 luci-theme-bootstrap
 # GUI addon
 luci-i18n-base-de
