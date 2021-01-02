@@ -39,6 +39,7 @@ px5g-mbedtls
 libustream-mbedtls
 luci-mod-falter
 luci-app-olsr
+luci-app-opkg
 luci-app-olsr-services
 luci-app-falter-owm
 luci-app-falter-owm-ant
@@ -50,6 +51,8 @@ luci-i18n-base-de
 luci-i18n-base-en
 luci-i18n-olsr-de
 luci-i18n-olsr-en
+luci-i18n-opkg-de
+luci-i18n-opkg-en
 luci-i18n-statistics-de
 luci-i18n-statistics-en
 
