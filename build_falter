@@ -10,6 +10,8 @@ RELEASES="
 
 FALTER_REPO_BASE="src/gz openwrt_falter http://download-master.berlin.freifunk.net/falter-feed"
 
+FREIFUNK_RELEASE=""
+
 
 function read_packageset {
 	local PACKAGE_SET_PATH=$1
@@ -98,12 +100,12 @@ function start_build {
     if [ -z $DEVICE ]; then
       for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
           echo "start building $profile..."
-          make image PROFILE="$profile" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
+          make image PROFILE="$profile" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
           echo "finished"
       done
     else
       echo "start building $DEVICE..."
-      make image PROFILE="$DEVICE" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/"
+      make image PROFILE="$DEVICE" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
     fi
     # move binaries into central firmware-dir, sort them for packagesets, there was given one.
     if [ $PKG_SET ]; then
