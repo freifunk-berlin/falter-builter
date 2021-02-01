@@ -75,14 +75,20 @@ function start_build {
     echo "building using: $IMAGE_BUILDER_URL"
     echo "selected branch: $BRANCH"
 
-    # only download imagebuilder, if we didn't have it from previous packagelist-build
+    # store imagebuilders in cache. Reload, if there is a newer version avaiable
+    local CACHE="../imagebuilder_cache"
+    if [ ! -d $CACHE ]; then mkdir -p $CACHE; fi
+    cd $CACHE
+    wget -N --no-if-modified-since $IMAGE_BUILDER_URL
+    cd ../build
+    # pull imagebuilder from cache-dir
+    cp ../imagebuilder_cache/$FILENAME $FILENAME
+
     echo $PWD
-    if [ ! -f $FILENAME ]; then
-      wget $IMAGE_BUILDER_URL
-    fi
+
     rm -rf $FOLDERNAME
     tar -xJf $FILENAME
-    
+
     cd $FOLDERNAME
     # patch json-info, so that it will contain every image, not just the last one
     cp -f ../../patches/json_overview_image_info.py scripts/json_overview_image_info.py
