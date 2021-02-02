@@ -32,6 +32,23 @@ function fetch_subdirs {
     curl -s $URL | grep href | grep -v 'snapshots\|releases' | awk -F'"' '{print $4}'
 }
 
+function is_wave1_device {
+	# detect, if a device has wave1-chipset by its firmware
+	local profile=$1
+	DEVICE_PACKAGES=$(make info | grep "$profile:" -A 2 | tail -n1 | cut -d':' -f2)
+          if [[ "$DEVICE_PACKAGES" =~ ath10k-firmware-qca988x || "$DEVICE_PACKAGES" =~ ath10k-firmware-qca9887 ]]; then
+            subsitute_ct_driver "$DEVICE_PACKAGES"
+          fi
+}
+
+function subsitute_ct_driver {
+	# generate a packagelist with ct-drivers/firmware substituted by normal one
+        local DEVICE_PACKAGES="$@"
+        echo "wave1 chipset detected..."
+        echo "change firmware and drivers in packagelist to non-ct counterparts..."
+        PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET"" $DEVICE_PACKAGES" | sed -e 's/ath10k-firmware-qca988x-ct/ath10k-firmware-qca988x -ath10k-firmware-qca988x-ct/g; s/ath10k-firmware-qca9887-ct/ath10k-firmware-qca9887 -ath10k-firmware-qca9887-ct/g; s/kmod-ath10k-ct/kmod-ath10k -kmod-ath10k-ct/g')
+}
+
 function derive_branch_from_url {
     URL=$1
     RELEASE_TYPE=$(echo $URL | awk -F'/' '{print $4}')
@@ -118,12 +135,26 @@ function start_build {
     if [ -z $DEVICE ]; then
       for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
           echo "start building $profile..."
-          make image PROFILE="$profile" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
+
+          is_wave1_device $profile
+          if [ -z $PACKAGE_SET_DEVICE ]; then
+              PACKAGE_SET_DEVICE="$PACKAGE_SET"
+          fi
+
+          make image PROFILE="$profile" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
+          PACKAGE_SET_DEVICE="" # empty packageset for use with next wave1-device
           echo "finished"
       done
     else
       echo "start building $DEVICE..."
-      make image PROFILE="$DEVICE" PACKAGES="$PACKAGE_SET" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
+
+      is_wave1_device $DEVICE
+      if [ -z $PACKAGE_SET_DEVICE ]; then
+          PACKAGE_SET_DEVICE="$PACKAGE_SET"
+      fi
+
+      make image PROFILE="$DEVICE" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
+      PACKAGE_SET_DEVICE=""
     fi
     # move binaries into central firmware-dir, sort them for packagesets, there was given one.
     if [ $PKG_SET ]; then
