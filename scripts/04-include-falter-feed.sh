@@ -16,5 +16,5 @@ printf \
 # add your custom package feeds here
 #
 # src/gz example_feed_name http://www.example.com/path/to/files
-$FALTER_REPO_BASE
+$REPO
 " > "$SCRIPTPATH/../embedded-files/etc/opkg/customfeeds.conf"

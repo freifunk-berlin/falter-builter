@@ -77,7 +77,7 @@ function generate_embedded_files {
 
     ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET
     ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_OPENWRT_BASE
-    export FALTER_REPO_BASE # export repo line to inject into images. contains whitespace...
+    export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh
 }
 
