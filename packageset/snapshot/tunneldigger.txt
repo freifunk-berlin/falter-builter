@@ -16,7 +16,7 @@ falter-profiles
 # Common
 mtr
 ip
-iperf
+iperf3
 tmux
 vnstat
 ethtool
