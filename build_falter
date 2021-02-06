@@ -46,6 +46,10 @@ Options:
   -r|--router [ROUTER-PROFILE]
     give a router-profile like 'glinet_gl-ar150'. This is optional.
 
+  -l|--list-routers
+    shows a list of the routers avaiable in that target and
+    their profile name. This name is the input for '-r'.
+
   -d|--development
     use development-feeds instead of release-feeds
 
@@ -146,6 +150,10 @@ while :; do
       exit 1
     fi
     ;;
+
+      l*|-list-routers)
+      PARSER_LIST_ROUTERS="y"
+      ;;
 
     h*|\?*|-help)
       print_usage
@@ -294,6 +302,12 @@ function start_build {
     cd $FOLDERNAME
     # patch json-info, so that it will contain every image, not just the last one
     cp -f ../../patches/json_overview_image_info.py scripts/json_overview_image_info.py
+
+    if [ "$PARSER_LIST_ROUTERS" == "y" ]; then
+      # if ask for, show avaiable router-profiles and quit
+      make info | sed -e '/Packages:/d;/hasImageMetadata:/d'
+      exit 0
+    fi
 
     case $BRANCH in
       snapshot)
