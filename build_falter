@@ -15,6 +15,21 @@ RELEASES="
 # General variables
 FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed/"
 FREIFUNK_RELEASE=""
+<<<<<<< HEAD
+=======
+DEPENDS="awk grep wget curl"
+
+
+# check for dependencies.
+for DEP in $DEPENDS; do
+  type "$DEP" > /dev/null
+  if [ $? != 0 ]; then
+    echo "$DEP is not installed, but needed for this script."
+    exit 1
+  fi
+done
+
+>>>>>>> build_falter: add command line parser
 
 
 ##################
