@@ -17,7 +17,6 @@ falter-profiles
 mtr
 ip
 iperf
-iperf3-ssl
 tmux
 vnstat
 ethtool
@@ -27,7 +26,7 @@ qos-scripts
 firewall
 iwinfo
 libiwinfo-lua
-tcpdump
+tcpdump-mini
 
 # falter Common
 falter-common
