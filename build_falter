@@ -12,14 +12,186 @@ RELEASES="
     https://downloads.openwrt.org/releases/19.07.6/targets/
     https://downloads.openwrt.org/snapshots/targets/"
 
-if [[ "$2" =~ 19.07 ]]; then # regex-matching. Not portable to sh!
-  FALTER_REPO_BASE="src/gz openwrt_falter http://buildbot.berlin.freifunk.net/buildbot/feed/openwrt-19.07"
-else
-  FALTER_REPO_BASE="src/gz openwrt_falter http://buildbot.berlin.freifunk.net/buildbot/feed/master"
-fi
-
+# General variables
+FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed/"
 FREIFUNK_RELEASE=""
 
+
+##################
+#   CMD-PARSER   #
+##################
+
+# POSIX-compliant getopt(s)-free old-style-supporting option parser from phk@[se.unix]
+# https://stackoverflow.com/a/33191693
+print_usage() {
+  echo "Usage:
+
+  $0 {p|v|t|s|p|d} [ARG...]
+
+Options:
+
+  -p|--packageset [PATH]
+    give a path to the packageset
+
+  -v|--version [VERSION]
+    OpenWrt-release to be used. i.e. `19.07`
+
+  -t|--target [TARGET]
+    target like `ath79`
+
+  -s|--sub-target [SUBTARGET]
+    something like `generic`. This is optional.
+
+  -r|--router [ROUTER-PROFILE]
+    give a router-profile like `glinet_gl-ar150`. This is optional.
+
+  -d|--development
+    use development-feeds instead of release-feeds
+
+" >&2
+}
+
+if [ $# -le 0 ]; then
+  print_usage
+  exit 1
+fi
+
+opt=
+while :; do
+
+  if [ $# -le 0 ]; then
+    # no parameters remaining -> end option parsing
+    break
+  elif [ ! "$opt" ]; then
+    # we are at the beginning of a fresh block
+    # remove optional leading hyphen and strip trailing whitespaces
+    opt=$(echo "$1" | sed 's/^-\?\([a-zA-Z0-9\?-]*\)/\1/')
+  fi
+
+  # get the first character -> check whether long option
+  first_chr=$(echo "$opt" | awk '{print substr($1, 1, 1)}')
+  [ "$first_chr" = - ] && long_option=T || long_option=F
+
+  # note to write the options here with a leading hyphen less
+  # also do not forget to end short options with a star
+  case $opt in
+    -)
+      # end of options
+      shift
+      break
+      ;;
+
+    d*|-development)
+      echo "using dev-feeds."
+      FALTER_REPO_BASE="$FALTER_REPO_BASE""new/"
+      ;;
+
+    p*|-packageset)
+      if [ "$2" ]; then
+        echo "Packagset is: $2"
+        PARSER_PACKAGESET="$2"
+        shift
+      else
+        echo "Packageset parameters incomplete!" >&2
+        print_usage
+        exit 1
+      fi
+      ;;
+
+    v*|-version)
+      if [ "$2" ]; then
+        echo "OpenWrt-version is: $2"
+        PARSER_OWT="$2"
+        shift
+      else
+        echo "Version parameters incomplete!" >&2
+        print_usage
+        exit 1
+      fi
+      ;;
+
+    t*|-target)
+    if [ "$2" ]; then
+      echo "Target is: $2"
+      PARSER_TARGET="$2"
+      shift
+    else
+      echo "Target parameters incomplete!" >&2
+      print_usage
+      exit 1
+    fi
+    ;;
+
+    s*|-sub-target)
+    if [ "$2" ]; then
+      echo "Sub-Target is: $2"
+      PARSER_SUBTARGET="$2"
+      shift
+    else
+      echo "Sub-Target parameters incomplete!" >&2
+      print_usage
+      exit 1
+    fi
+    ;;
+
+    r*|-router)
+    if [ "$2" ]; then
+      echo "Router is: $2"
+      PARSER_PROFILE="$2"
+      shift
+    else
+      echo "router-profile parameters incomplete!" >&2
+      print_usage
+      exit 1
+    fi
+    ;;
+
+    h*|\?*|-help)
+      print_usage
+      exit 0
+      ;;
+
+    *)
+
+      if [ "$long_option" = T ]; then
+        opt=$(echo "$opt" | awk '{print substr($1, 2)}')
+      else
+        opt=$first_chr
+      fi
+      printf 'Error: Unknown option: "%s"\n' "$opt" >&2
+      print_usage
+      exit 1
+      ;;
+
+  esac
+
+  if [ "$long_option" = T ]; then
+    # if we had a long option then we are going to get a new block next
+    shift
+    opt=
+
+  else
+    # if we had a short option then just move to the next character
+    opt=$(echo "$opt" | awk '{print substr($1, 2)}')
+
+    # if block is now empty then shift to the next one
+    [ "$opt" ] || shift
+  fi
+done
+
+
+# specify feed based on openwrt-version
+if [[ "$PARSER_OWT" =~ 19.07 ]]; then # regex-matching. Not portable to sh!
+  FALTER_REPO_BASE="$FALTER_REPO_BASE""openwrt-19.07/"
+else
+  FALTER_REPO_BASE="$FALTER_REPO_BASE""master/"
+fi
+
+
+
+#################
+#   FUNCTIONS   #
+#################
 
 function read_packageset {
 	local PACKAGE_SET_PATH=$1
@@ -171,19 +343,15 @@ function start_build {
 #    MAIN    #
 ##############
 
-if [ "$1" == "all" ]; then
+if [ "$PARSER_PACKAGESET" == "all" ]; then
 	# build all imageflavours. For this, get paths of packagesets
-	VER=$2
 	# fetch paths of packagelists (depends on openwrt-version). If not unique, chose most recent version of possibilities.
-	PSET_PATHS=$(find packageset | sort | grep -e "/$VER" | grep .txt | tail -n3)
+	PSET_PATHS=$(find packageset | sort | grep -e "/$PARSER_OWT" | grep .txt | tail -n3)
 	echo $PSET_PATHS
 	#exit
 else
-	read_packageset "$1"
+	read_packageset "$PARSER_PACKAGESET"
 fi
-# shift packagelist-arg away.
-shift
-
 
 # remove artifacts of last build
 mkdir -p firmwares
@@ -194,12 +362,11 @@ cd build
 
 
 # read command-line parameters
-if [ $# -gt 0 ]; then
-	CONF_RELEASE="$1"
-	CONF_TARGET="$2"
-	CONF_SUBTARGET="$3"
-	CONF_DEVICE="$4"
-fi
+CONF_RELEASE="$PARSER_OWT"
+CONF_TARGET="$PARSER_TARGET"
+CONF_SUBTARGET="$PARSER_SUBTARGET"
+CONF_DEVICE="$PARSER_PROFILE"
+
 
 
 if [ -z "$CONF_RELEASE" ] && [ -z "$CONF_TARGET" ]; then
