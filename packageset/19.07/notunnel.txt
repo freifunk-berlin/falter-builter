@@ -16,7 +16,7 @@ falter-berlin-uhttpd-defaults
 # Common
 mtr
 ip
-iperf
+iperf3
 tmux
 vnstat
 ethtool

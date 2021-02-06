@@ -22,7 +22,7 @@ falter-common-olsr
 tcpdump-mini
 mtr
 ip
-iperf
+iperf3
 tmux
 vnstat
 ethtool
