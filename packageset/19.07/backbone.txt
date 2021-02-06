@@ -75,6 +75,7 @@ kmod-ipip
 # BATMAN
 kmod-batman-adv
 alfred
+-batctl-tiny
 batctl-full
 
 # Statistics
