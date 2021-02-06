@@ -19,7 +19,7 @@ falter-common
 falter-common-olsr
 
 # Utils
-tcpdump
+tcpdump-mini
 mtr
 ip
 iperf
