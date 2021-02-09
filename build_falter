@@ -188,6 +188,16 @@ else
 fi
 
 
+# check for dependencies.
+SCRIPT_DEPENDS="awk curl gawk grep git gettext python3 rsync sed unzip wget"
+for DEP in $SCRIPT_DEPENDS; do
+  type "$DEP" > /dev/null
+  if [ $? != 0 ]; then
+    echo "$DEP is not installed, but needed for this script."
+    exit 1
+  fi
+done
+
 
 #################
 #   FUNCTIONS   #
