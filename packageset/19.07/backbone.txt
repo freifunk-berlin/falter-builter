@@ -73,10 +73,10 @@ olsrd-mod-watchdog
 kmod-ipip
 
 # BATMAN
+batctl-full
+-batctl-tiny
 kmod-batman-adv
 alfred
--batctl-tiny
-batctl-full
 
 # Statistics
 luci-app-statistics
