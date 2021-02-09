@@ -34,20 +34,24 @@ Options:
     give a path to the packageset
 
   -v|--version [VERSION]
-    OpenWrt-release to be used. i.e. `19.07`
+    OpenWrt-release to be used. i.e. '19.07'
 
   -t|--target [TARGET]
-    target like `ath79`
+    target like 'ath79'
 
   -s|--sub-target [SUBTARGET]
-    something like `generic`. This is optional.
+    something like 'generic'. This is optional.
 
   -r|--router [ROUTER-PROFILE]
-    give a router-profile like `glinet_gl-ar150`. This is optional.
+    give a router-profile like 'glinet_gl-ar150'. This is optional.
 
   -l|--list-routers
     shows a list of the routers avaiable in that target and
-    their profile name. This name is the input for `-r`.
+    their profile name. This name is the input for '-r'.
+
+  -b|--build-subset [PROFILE-LIST-FILE]
+    build a subset of routers. Takes a file in which every router
+    is listed by its profile name on a individual line.
 
   -d|--development
     use development-feeds instead of release-feeds
@@ -149,6 +153,18 @@ while :; do
       exit 1
     fi
     ;;
+
+    b*|-build-subset)
+      if [ "$2" ]; then
+        echo "Router-List is at: $2"
+        PARSER_SUBSET="$2"
+        shift
+      else
+        echo "Packageset parameters incomplete!" >&2
+        print_usage
+        exit 1
+      fi
+      ;;
 
       l*|-list-routers)
       PARSER_LIST_ROUTERS="y"
@@ -369,9 +385,9 @@ fi
 
 # remove artifacts of last build
 mkdir -p firmwares
-rm -rf firmwares/*
+#rm -rf firmwares/*
 mkdir -p build
-rm -rf build/*
+#rm -rf build/*
 cd build
 
 
@@ -417,7 +433,13 @@ else
 			for PKG_SET in $PSET_PATHS; do
 				echo "BUILDING 3 PACKAGELISTS"
 				read_packageset "../$PKG_SET"
-				start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $CONF_DEVICE
+        if [ -n $PARSER_SUBSET ]; then
+          for device in $(cat ../$PARSER_SUBSET); do
+            start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $device
+          done
+        else
+				  start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $CONF_DEVICE
+        fi
 			done
 		else
 			echo "BUILDING 1 PACKAGLIST"
