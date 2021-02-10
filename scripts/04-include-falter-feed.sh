@@ -10,11 +10,13 @@ mkdir -p "$SCRIPTPATH/../embedded-files/etc/opkg/keys"
 URL="https://buildbot.berlin.freifunk.net/buildbot/feed/packagefeed_master.pub"
 curl "$URL" > "$SCRIPTPATH/../embedded-files/etc/opkg/keys/61a078a38408e710"
 
+REPO_HTTP=$(echo $REPO | sed -e 's/https/http/g')
+
 # We inherited $FALTER_REPO_BASE from caller whom exported it.
 printf \
 "
 # add your custom package feeds here
 #
 # src/gz example_feed_name http://www.example.com/path/to/files
-$REPO
+$REPO_HTTP
 " > "$SCRIPTPATH/../embedded-files/etc/opkg/customfeeds.conf"
