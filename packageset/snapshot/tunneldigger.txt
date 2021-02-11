@@ -37,6 +37,7 @@ falter-profiles
 # GUI-basics
 uhttpd
 uhttpd-mod-ubus
+luci
 luci-ssl
 luci-app-ffwizard-falter
 luci-mod-falter
