@@ -32,6 +32,7 @@ libiwinfo-lua
 # GUI-basics
 uhttpd
 uhttpd-mod-ubus
+luci
 luci-ssl
 luci-mod-falter
 luci-app-olsr

@@ -41,6 +41,7 @@ uhttpd
 uhttpd-mod-ubus
 px5g-mbedtls
 libustream-mbedtls
+luci
 luci-app-ffwizard-falter
 luci-mod-falter
 luci-app-olsr

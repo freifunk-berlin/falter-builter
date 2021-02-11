@@ -35,6 +35,7 @@ uhttpd
 uhttpd-mod-ubus
 px5g-mbedtls
 libustream-mbedtls
+luci
 luci-mod-falter
 luci-app-olsr
 luci-app-opkg
