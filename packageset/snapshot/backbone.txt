@@ -56,10 +56,6 @@ luci-i18n-statistics-de
 luci-i18n-statistics-en
 luci-i18n-falter-de
 luci-i18n-falter-en
-luci-i18n-ffwizard-falter-de
-luci-i18n-ffwizard-falter-en
-luci-i18n-falter-policyrouting-de
-luci-i18n-falter-policyrouting-en
 
 # OLSR
 olsrd
