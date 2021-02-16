@@ -17,6 +17,7 @@ falter-berlin-uhttpd-defaults
 # falter Common
 falter-common
 falter-common-olsr
+falter-berlin-tunneldigger
 
 # Utils
 tcpdump-mini

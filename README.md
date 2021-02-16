@@ -17,7 +17,7 @@ If you give packageset, release and no target, it will generate all targets of t
 
 If you like to build only one specific router-profile, you *must* give all the arguments before. 
 
-`version` has currently two valid values: `19.07` and `snapshot`.
+`version` has currently these valid values: `19.07`, '21.02' and `snapshot`.
 
 After the buildprocess finished, you will find the images in `firmwares/`.
 
