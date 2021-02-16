@@ -10,6 +10,7 @@ source buildconfig.conf
 RELEASES="
     https://downloads.openwrt.org/releases/19.07.5/targets/
     https://downloads.openwrt.org/releases/19.07.6/targets/
+    https://downloads.openwrt.olsr/releases/21.02-SNAPSHOT/targets/
     https://downloads.openwrt.org/snapshots/targets/"
 
 # General variables
@@ -34,7 +35,7 @@ Options:
     give a path to the packageset
 
   -v|--version [VERSION]
-    OpenWrt-release to be used. i.e. '19.07'
+    OpenWrt-release to be used. i.e. '19.07' or '21.02'
 
   -t|--target [TARGET]
     target like 'ath79'
@@ -183,6 +184,8 @@ done
 # specify feed based on openwrt-version
 if [[ "$PARSER_OWT" =~ 19.07 ]]; then # regex-matching. Not portable to sh!
   FALTER_REPO_BASE="$FALTER_REPO_BASE""openwrt-19.07/"
+else if [[ "$PARSER_OWT" =~ 21.02 ]]; then # also regex magic
+  FALTER_REPO_BASE="$FALTER_REPO_BASE""openwrt-21.02/"
 else
   FALTER_REPO_BASE="$FALTER_REPO_BASE""master/"
 fi
