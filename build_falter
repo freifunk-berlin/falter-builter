@@ -10,7 +10,7 @@ source buildconfig.conf
 RELEASES="
     https://downloads.openwrt.org/releases/19.07.5/targets/
     https://downloads.openwrt.org/releases/19.07.6/targets/
-    https://downloads.openwrt.olsr/releases/21.02-SNAPSHOT/targets/
+    https://downloads.openwrt.org/releases/21.02-SNAPSHOT/targets/
     https://downloads.openwrt.org/snapshots/targets/"
 
 # General variables
