@@ -261,15 +261,17 @@ function generate_embedded_files {
     local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
     local SUBTARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 8)
 
-    # Get the FREIFUNK_RELEASE variable from the falter/packages repo
+    # Get the FREIFUNK_RELEASE variable from the falter feed
     # located in the falter-common package.
     [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
     [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$FALTERBRANCH"
-    local TMP=$(curl -q https://raw.githubusercontent.com/Freifunk-Spalter/packages/$FALTERBRANCH/packages/falter-common/files-common/etc/freifunk_release)
+    local FEEDURL=$(echo $REPO | cut -d ' ' -f 3)
+    local COMMONFILEURL=$FEEDURL"/"$(curl -s ${FEEDURL}/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
+    local TMP=$(curl -s $COMMONFILEURL | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
     eval $TMP
 
-    ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET
-    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_OPENWRT_BASE
+    ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_REVISION
+    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_OPENWRT_BASE $FREIFUNK_REVISION
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh
 }
