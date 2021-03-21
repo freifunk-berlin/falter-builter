@@ -7,6 +7,7 @@
 # get some build-config
 source buildconfig.conf
 
+RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
 RELEASES="
     https://downloads.openwrt.org/releases/19.07.5/targets/
     https://downloads.openwrt.org/releases/19.07.6/targets/
@@ -34,7 +35,8 @@ Options:
     give a path to the packageset
 
   -v|--version [VERSION]
-    OpenWrt-release to be used. i.e. '19.07' or '21.02'
+    Falter-release to be used. i.e. '1.1.0' or '1.1.1-snapshot', etc.
+    Maps directly to the directories at https://firmware.berlin.freifunk.net/feed/
 
   -t|--target [TARGET]
     target like 'ath79'
@@ -104,8 +106,8 @@ while :; do
 
     v* | -version)
         if [ "$2" ]; then
-            echo "OpenWrt-version is: $2"
-            PARSER_OWT="$2"
+            echo "Falter-version is: $2"
+            PARSER_FALTER_VERSION="$2"
             shift
         else
             echo "Version parameters incomplete!" >&2
@@ -187,15 +189,6 @@ while :; do
     fi
 done
 
-# specify feed based on openwrt-version
-if [[ "$PARSER_OWT" =~ 19.07 ]]; then # regex-matching. Not portable to sh!
-    FALTER_REPO_BASE="$FALTER_REPO_BASE""openwrt-19.07/"
-elif [[ "$PARSER_OWT" =~ 21.02 ]]; then # also regex magic
-    FALTER_REPO_BASE="$FALTER_REPO_BASE""openwrt-21.02/"
-else
-    FALTER_REPO_BASE="$FALTER_REPO_BASE""master/"
-fi
-
 # check for dependencies.
 SCRIPT_DEPENDS="awk curl gawk grep git gettext python3 rsync sed unzip wget"
 for DEP in $SCRIPT_DEPENDS; do
@@ -206,9 +199,28 @@ for DEP in $SCRIPT_DEPENDS; do
     fi
 done
 
+# repository derives directly from the falter-version. Download freifunk_release
+# file and determine openwrt-version by its variables
+BASE_URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f 3)
+FEEDURL="$BASE_URL$PARSER_FALTER_VERSION/packages/mips_24kc/falter/"
+COMMONFILEURL=$FEEDURL$(curl -s ${FEEDURL}/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
+TMP=$(curl -s $COMMONFILEURL | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
+eval $TMP
+
 #################
 #   FUNCTIONS   #
 #################
+
+function derive_packagelist_version {
+    # OpenWrt-Version from freifunk-release file could be something like
+    # '19.07-SNAPSHOT'. But we have only packagelists for 19.07... Solve that.
+    regex="^[0-9][0-9].[0-9][0-9]"
+    if [[ $1 =~ $regex ]]; then
+        echo $(echo $1 | cut -c 1-5)
+    else
+        echo "snapshot"
+    fi
+}
 
 function read_packageset {
     local PACKAGE_SET_PATH=$1
@@ -260,14 +272,10 @@ function generate_embedded_files {
     # Get the FREIFUNK_RELEASE variable from the falter feed
     # located in the falter-common package.
     [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
-    [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$FALTERBRANCH"
-    local FEEDURL=$(echo $REPO | cut -d ' ' -f 3)
-    local COMMONFILEURL=$FEEDURL"/"$(curl -s ${FEEDURL}/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
-    local TMP=$(curl -s $COMMONFILEURL | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
-    eval $TMP
+    [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
 
     ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_REVISION
-    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_OPENWRT_BASE $FREIFUNK_REVISION
+    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh
 }
@@ -319,7 +327,7 @@ function start_build {
     INSTR_SET=$(grep "openwrt_base" repositories.conf | awk -F'/' "{print \$$ispos}")
     echo "selected instruction set: $INSTR_SET"
 
-    REPO="$FALTER_REPO_BASE/packages/$INSTR_SET/falter"
+    REPO="$FALTER_REPO_BASE/$PARSER_FALTER_VERSION/packages/$INSTR_SET/falter"
     echo "injecting repo line: $REPO"
     echo "$REPO" >>repositories.conf
 
@@ -367,6 +375,8 @@ function start_build {
 #    MAIN    #
 ##############
 
+PARSER_OWT=$(derive_packagelist_version $FREIFUNK_OPENWRT_BASE)
+
 if [ "$PARSER_PACKAGESET" == "all" ]; then
     # build all imageflavours. For this, get paths of packagesets
     # fetch paths of packagelists (depends on openwrt-version). If not unique, chose most recent version of possibilities.
@@ -403,8 +413,7 @@ if [ -z "$CONF_RELEASE" ] && [ -z "$CONF_TARGET" ]; then
     exit
 elif [ -z "$CONF_TARGET" ]; then
     # build one release for all targets
-    # fetch release-link. in case there is more than one, fetch recent release.
-    RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
+    RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
     for target in $(fetch_subdirs "$RELEASE_LINK"); do
         for subtarget in $(fetch_subdirs $RELEASE_LINK$target); do
             imagebuilder=$(fetch_subdirs $RELEASE_LINK$target$subtarget | grep imagebuilder)
@@ -414,7 +423,7 @@ elif [ -z "$CONF_TARGET" ]; then
     exit
 else
     # there was given a release and a target
-    RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
+    RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
     # if there was defined a subtarget and option device, only build that.
     if [ -n "$CONF_SUBTARGET" ]; then
         # build directly that subtarget. if requested, for all image types.
