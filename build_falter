@@ -17,7 +17,6 @@ RELEASES="
 FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed/"
 FREIFUNK_RELEASE=""
 
-
 ##################
 #   CMD-PARSER   #
 ##################
@@ -25,7 +24,7 @@ FREIFUNK_RELEASE=""
 # POSIX-compliant getopt(s)-free old-style-supporting option parser from phk@[se.unix]
 # https://stackoverflow.com/a/33191693
 print_usage() {
-  echo "Usage:
+    echo "Usage:
 
   $0 {p|v|t|s|p|d} [ARG...]
 
@@ -57,167 +56,164 @@ Options:
 }
 
 if [ $# -le 0 ]; then
-  print_usage
-  exit 1
+    print_usage
+    exit 1
 fi
 
 opt=
 while :; do
 
-  if [ $# -le 0 ]; then
-    # no parameters remaining -> end option parsing
-    break
-  elif [ ! "$opt" ]; then
-    # we are at the beginning of a fresh block
-    # remove optional leading hyphen and strip trailing whitespaces
-    opt=$(echo "$1" | sed 's/^-\?\([a-zA-Z0-9\?-]*\)/\1/')
-  fi
+    if [ $# -le 0 ]; then
+        # no parameters remaining -> end option parsing
+        break
+    elif [ ! "$opt" ]; then
+        # we are at the beginning of a fresh block
+        # remove optional leading hyphen and strip trailing whitespaces
+        opt=$(echo "$1" | sed 's/^-\?\([a-zA-Z0-9\?-]*\)/\1/')
+    fi
 
-  # get the first character -> check whether long option
-  first_chr=$(echo "$opt" | awk '{print substr($1, 1, 1)}')
-  [ "$first_chr" = - ] && long_option=T || long_option=F
+    # get the first character -> check whether long option
+    first_chr=$(echo "$opt" | awk '{print substr($1, 1, 1)}')
+    [ "$first_chr" = - ] && long_option=T || long_option=F
 
-  # note to write the options here with a leading hyphen less
-  # also do not forget to end short options with a star
-  case $opt in
+    # note to write the options here with a leading hyphen less
+    # also do not forget to end short options with a star
+    case $opt in
     -)
-      # end of options
-      shift
-      break
-      ;;
-
-    d*|-development)
-      echo "using dev-feeds."
-      FALTER_REPO_BASE="$FALTER_REPO_BASE""new/"
-      ;;
-
-    p*|-packageset)
-      if [ "$2" ]; then
-        echo "Packagset is: $2"
-        PARSER_PACKAGESET="$2"
+        # end of options
         shift
-      else
-        echo "Packageset parameters incomplete!" >&2
+        break
+        ;;
+
+    d* | -development)
+        echo "using dev-feeds."
+        FALTER_REPO_BASE="$FALTER_REPO_BASE""new/"
+        ;;
+
+    p* | -packageset)
+        if [ "$2" ]; then
+            echo "Packagset is: $2"
+            PARSER_PACKAGESET="$2"
+            shift
+        else
+            echo "Packageset parameters incomplete!" >&2
+            print_usage
+            exit 1
+        fi
+        ;;
+
+    v* | -version)
+        if [ "$2" ]; then
+            echo "OpenWrt-version is: $2"
+            PARSER_OWT="$2"
+            shift
+        else
+            echo "Version parameters incomplete!" >&2
+            print_usage
+            exit 1
+        fi
+        ;;
+
+    t* | -target)
+        if [ "$2" ]; then
+            echo "Target is: $2"
+            PARSER_TARGET="$2"
+            shift
+        else
+            echo "Target parameters incomplete!" >&2
+            print_usage
+            exit 1
+        fi
+        ;;
+
+    s* | -sub-target)
+        if [ "$2" ]; then
+            echo "Sub-Target is: $2"
+            PARSER_SUBTARGET="$2"
+            shift
+        else
+            echo "Sub-Target parameters incomplete!" >&2
+            print_usage
+            exit 1
+        fi
+        ;;
+
+    r* | -router)
+        if [ "$2" ]; then
+            echo "Router is: $2"
+            PARSER_PROFILE="$2"
+            shift
+        else
+            echo "router-profile parameters incomplete!" >&2
+            print_usage
+            exit 1
+        fi
+        ;;
+
+    l* | -list-routers)
+        PARSER_LIST_ROUTERS="y"
+        ;;
+
+    h* | \?* | -help)
         print_usage
-        exit 1
-      fi
-      ;;
-
-    v*|-version)
-      if [ "$2" ]; then
-        echo "OpenWrt-version is: $2"
-        PARSER_OWT="$2"
-        shift
-      else
-        echo "Version parameters incomplete!" >&2
-        print_usage
-        exit 1
-      fi
-      ;;
-
-    t*|-target)
-    if [ "$2" ]; then
-      echo "Target is: $2"
-      PARSER_TARGET="$2"
-      shift
-    else
-      echo "Target parameters incomplete!" >&2
-      print_usage
-      exit 1
-    fi
-    ;;
-
-    s*|-sub-target)
-    if [ "$2" ]; then
-      echo "Sub-Target is: $2"
-      PARSER_SUBTARGET="$2"
-      shift
-    else
-      echo "Sub-Target parameters incomplete!" >&2
-      print_usage
-      exit 1
-    fi
-    ;;
-
-    r*|-router)
-    if [ "$2" ]; then
-      echo "Router is: $2"
-      PARSER_PROFILE="$2"
-      shift
-    else
-      echo "router-profile parameters incomplete!" >&2
-      print_usage
-      exit 1
-    fi
-    ;;
-
-      l*|-list-routers)
-      PARSER_LIST_ROUTERS="y"
-      ;;
-
-    h*|\?*|-help)
-      print_usage
-      exit 0
-      ;;
+        exit 0
+        ;;
 
     *)
 
-      if [ "$long_option" = T ]; then
+        if [ "$long_option" = T ]; then
+            opt=$(echo "$opt" | awk '{print substr($1, 2)}')
+        else
+            opt=$first_chr
+        fi
+        printf 'Error: Unknown option: "%s"\n' "$opt" >&2
+        print_usage
+        exit 1
+        ;;
+
+    esac
+
+    if [ "$long_option" = T ]; then
+        # if we had a long option then we are going to get a new block next
+        shift
+        opt=
+
+    else
+        # if we had a short option then just move to the next character
         opt=$(echo "$opt" | awk '{print substr($1, 2)}')
-      else
-        opt=$first_chr
-      fi
-      printf 'Error: Unknown option: "%s"\n' "$opt" >&2
-      print_usage
-      exit 1
-      ;;
 
-  esac
-
-  if [ "$long_option" = T ]; then
-    # if we had a long option then we are going to get a new block next
-    shift
-    opt=
-
-  else
-    # if we had a short option then just move to the next character
-    opt=$(echo "$opt" | awk '{print substr($1, 2)}')
-
-    # if block is now empty then shift to the next one
-    [ "$opt" ] || shift
-  fi
+        # if block is now empty then shift to the next one
+        [ "$opt" ] || shift
+    fi
 done
-
 
 # specify feed based on openwrt-version
 if [[ "$PARSER_OWT" =~ 19.07 ]]; then # regex-matching. Not portable to sh!
-  FALTER_REPO_BASE="$FALTER_REPO_BASE""openwrt-19.07/"
+    FALTER_REPO_BASE="$FALTER_REPO_BASE""openwrt-19.07/"
 elif [[ "$PARSER_OWT" =~ 21.02 ]]; then # also regex magic
-  FALTER_REPO_BASE="$FALTER_REPO_BASE""openwrt-21.02/"
+    FALTER_REPO_BASE="$FALTER_REPO_BASE""openwrt-21.02/"
 else
-  FALTER_REPO_BASE="$FALTER_REPO_BASE""master/"
+    FALTER_REPO_BASE="$FALTER_REPO_BASE""master/"
 fi
-
 
 # check for dependencies.
 SCRIPT_DEPENDS="awk curl gawk grep git gettext python3 rsync sed unzip wget"
 for DEP in $SCRIPT_DEPENDS; do
-  type "$DEP" > /dev/null
-  if [ $? != 0 ]; then
-    echo "$DEP is not installed, but needed for this script."
-    exit 1
-  fi
+    type "$DEP" >/dev/null
+    if [ $? != 0 ]; then
+        echo "$DEP is not installed, but needed for this script."
+        exit 1
+    fi
 done
-
 
 #################
 #   FUNCTIONS   #
 #################
 
 function read_packageset {
-	local PACKAGE_SET_PATH=$1
-	# read packageset, while removing comments, empty lines and newlines
-	PACKAGE_SET=$(cat $PACKAGE_SET_PATH | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
+    local PACKAGE_SET_PATH=$1
+    # read packageset, while removing comments, empty lines and newlines
+    PACKAGE_SET=$(cat $PACKAGE_SET_PATH | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
 }
 
 function fetch_subdirs {
@@ -226,32 +222,32 @@ function fetch_subdirs {
 }
 
 function is_wave1_device {
-	# detect, if a device has wave1-chipset by its firmware
-	local profile=$1
-	DEVICE_PACKAGES=$(make info | grep "$profile:" -A 2 | tail -n1 | cut -d':' -f2)
-          if [[ "$DEVICE_PACKAGES" =~ ath10k-firmware-qca988x || "$DEVICE_PACKAGES" =~ ath10k-firmware-qca9887 ]]; then
-            subsitute_ct_driver "$DEVICE_PACKAGES"
-          fi
+    # detect, if a device has wave1-chipset by its firmware
+    local profile=$1
+    DEVICE_PACKAGES=$(make info | grep "$profile:" -A 2 | tail -n1 | cut -d':' -f2)
+    if [[ "$DEVICE_PACKAGES" =~ ath10k-firmware-qca988x || "$DEVICE_PACKAGES" =~ ath10k-firmware-qca9887 ]]; then
+        subsitute_ct_driver "$DEVICE_PACKAGES"
+    fi
 }
 
 function subsitute_ct_driver {
-	# generate a packagelist with ct-drivers/firmware substituted by normal one
-        local DEVICE_PACKAGES="$@"
-        echo "wave1 chipset detected..."
-        echo "change firmware and drivers in packagelist to non-ct counterparts..."
-        PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET"" $DEVICE_PACKAGES" | sed -e 's/ath10k-firmware-qca988x-ct/ath10k-firmware-qca988x -ath10k-firmware-qca988x-ct/g; s/ath10k-firmware-qca9887-ct/ath10k-firmware-qca9887 -ath10k-firmware-qca9887-ct/g; s/kmod-ath10k-ct/kmod-ath10k -kmod-ath10k-ct/g')
+    # generate a packagelist with ct-drivers/firmware substituted by normal one
+    local DEVICE_PACKAGES="$@"
+    echo "wave1 chipset detected..."
+    echo "change firmware and drivers in packagelist to non-ct counterparts..."
+    PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET"" $DEVICE_PACKAGES" | sed -e 's/ath10k-firmware-qca988x-ct/ath10k-firmware-qca988x -ath10k-firmware-qca988x-ct/g; s/ath10k-firmware-qca9887-ct/ath10k-firmware-qca9887 -ath10k-firmware-qca9887-ct/g; s/kmod-ath10k-ct/kmod-ath10k -kmod-ath10k-ct/g')
 }
 
 function derive_branch_from_url {
     URL=$1
     RELEASE_TYPE=$(echo $URL | awk -F'/' '{print $4}')
     case $RELEASE_TYPE in
-      releases)
+    releases)
         echo $URL | awk -F'/' '{print $5}' | cut -d. -f1-2
-      ;;
-      snapshots)
+        ;;
+    snapshots)
         echo snapshot
-      ;;
+        ;;
     esac
 }
 
@@ -306,18 +302,18 @@ function start_build {
     cp -f ../../patches/json_overview_image_info.py scripts/json_overview_image_info.py
 
     if [ "$PARSER_LIST_ROUTERS" == "y" ]; then
-      # if ask for, show avaiable router-profiles and quit
-      make info | sed -e '/Packages:/d;/hasImageMetadata:/d'
-      exit 0
+        # if ask for, show avaiable router-profiles and quit
+        make info | sed -e '/Packages:/d;/hasImageMetadata:/d'
+        exit 0
     fi
 
     case $BRANCH in
-      snapshot)
+    snapshot)
         ispos=7
-	;;
-      *)
+        ;;
+    *)
         ispos=8
-	;;
+        ;;
     esac
 
     INSTR_SET=$(grep "openwrt_base" repositories.conf | awk -F'/' "{print \$$ispos}")
@@ -325,61 +321,60 @@ function start_build {
 
     REPO="$FALTER_REPO_BASE/packages/$INSTR_SET/falter"
     echo "injecting repo line: $REPO"
-    echo "$REPO" >> repositories.conf
+    echo "$REPO" >>repositories.conf
 
     # the hexadecimal number represents the fringerprint of the key. Refer to third section of https://openwrt.org/docs/guide-user/security/keygen#generate_usign_key_pair
     local URL="http://buildbot.berlin.freifunk.net/buildbot/feed/packagefeed_master.pub"
     echo "loading package-feed key from $URL"
-    curl "$URL" > keys/61a078a38408e710
+    curl "$URL" >keys/61a078a38408e710
 
     generate_embedded_files $BRANCH
     if [ -z $DEVICE ]; then
-      for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
-          echo "start building $profile..."
+        for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
+            echo "start building $profile..."
 
-          is_wave1_device $profile
-          if [ -z $PACKAGE_SET_DEVICE ]; then
-              PACKAGE_SET_DEVICE="$PACKAGE_SET"
-          fi
+            is_wave1_device $profile
+            if [ -z $PACKAGE_SET_DEVICE ]; then
+                PACKAGE_SET_DEVICE="$PACKAGE_SET"
+            fi
 
-          make image PROFILE="$profile" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
-          PACKAGE_SET_DEVICE="" # empty packageset for use with next wave1-device
-          echo "finished"
-      done
+            make image PROFILE="$profile" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
+            PACKAGE_SET_DEVICE="" # empty packageset for use with next wave1-device
+            echo "finished"
+        done
     else
-      echo "start building $DEVICE..."
+        echo "start building $DEVICE..."
 
-      is_wave1_device $DEVICE
-      if [ -z $PACKAGE_SET_DEVICE ]; then
-          PACKAGE_SET_DEVICE="$PACKAGE_SET"
-      fi
+        is_wave1_device $DEVICE
+        if [ -z $PACKAGE_SET_DEVICE ]; then
+            PACKAGE_SET_DEVICE="$PACKAGE_SET"
+        fi
 
-      make image PROFILE="$DEVICE" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
-      PACKAGE_SET_DEVICE=""
+        make image PROFILE="$DEVICE" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
+        PACKAGE_SET_DEVICE=""
     fi
     # move binaries into central firmware-dir, sort them for packagesets, there was given one.
     if [ $PKG_SET ]; then
-		rsync -a --remove-source-files bin/targets/* ../../firmwares/$PKG_SET/
+        rsync -a --remove-source-files bin/targets/* ../../firmwares/$PKG_SET/
     else
-		rsync -a --remove-source-files bin/targets/* ../../firmwares/
+        rsync -a --remove-source-files bin/targets/* ../../firmwares/
     fi
 
     cd ..
 }
-
 
 ##############
 #    MAIN    #
 ##############
 
 if [ "$PARSER_PACKAGESET" == "all" ]; then
-	# build all imageflavours. For this, get paths of packagesets
-	# fetch paths of packagelists (depends on openwrt-version). If not unique, chose most recent version of possibilities.
-	PSET_PATHS=$(find packageset | sort | grep -e "/$PARSER_OWT" | grep .txt | tail -n3)
-	echo $PSET_PATHS
-	#exit
+    # build all imageflavours. For this, get paths of packagesets
+    # fetch paths of packagelists (depends on openwrt-version). If not unique, chose most recent version of possibilities.
+    PSET_PATHS=$(find packageset | sort | grep -e "/$PARSER_OWT" | grep .txt | tail -n3)
+    echo $PSET_PATHS
+    #exit
 else
-	read_packageset "$PARSER_PACKAGESET"
+    read_packageset "$PARSER_PACKAGESET"
 fi
 
 # remove artifacts of last build
@@ -389,70 +384,67 @@ mkdir -p build
 rm -rf build/*
 cd build
 
-
 # read command-line parameters
 CONF_RELEASE="$PARSER_OWT"
 CONF_TARGET="$PARSER_TARGET"
 CONF_SUBTARGET="$PARSER_SUBTARGET"
 CONF_DEVICE="$PARSER_PROFILE"
 
-
-
 if [ -z "$CONF_RELEASE" ] && [ -z "$CONF_TARGET" ]; then
-	# build all targets for all releases
-	for release in $RELEASES; do
-	    for target in $(fetch_subdirs $release); do
-	        for subtarget in $(fetch_subdirs $release$target); do
-		    imagebuilder=$(fetch_subdirs $release$target$subtarget | grep imagebuilder)
-		    start_build $release$target$subtarget$imagebuilder
-	        done
-	    done
-	done
-	exit
+    # build all targets for all releases
+    for release in $RELEASES; do
+        for target in $(fetch_subdirs $release); do
+            for subtarget in $(fetch_subdirs $release$target); do
+                imagebuilder=$(fetch_subdirs $release$target$subtarget | grep imagebuilder)
+                start_build $release$target$subtarget$imagebuilder
+            done
+        done
+    done
+    exit
 elif [ -z "$CONF_TARGET" ]; then
-	# build one release for all targets
-	# fetch release-link. in case there is more than one, fetch recent release.
-	RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
-	for target in $(fetch_subdirs "$RELEASE_LINK"); do
-		for subtarget in $(fetch_subdirs $RELEASE_LINK$target); do
-			imagebuilder=$(fetch_subdirs $RELEASE_LINK$target$subtarget | grep imagebuilder)
-		    start_build $RELEASE_LINK$target$subtarget$imagebuilder
-	    done
-	done
-	exit
+    # build one release for all targets
+    # fetch release-link. in case there is more than one, fetch recent release.
+    RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
+    for target in $(fetch_subdirs "$RELEASE_LINK"); do
+        for subtarget in $(fetch_subdirs $RELEASE_LINK$target); do
+            imagebuilder=$(fetch_subdirs $RELEASE_LINK$target$subtarget | grep imagebuilder)
+            start_build $RELEASE_LINK$target$subtarget$imagebuilder
+        done
+    done
+    exit
 else
-	# there was given a release and a target
-	RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
-	# if there was defined a subtarget and option device, only build that.
-	if [ -n "$CONF_SUBTARGET" ]; then
-		# build directly that subtarget. if requested, for all image types.
-		TARGET_LIST="$RELEASE_LINK$CONF_TARGET/$CONF_SUBTARGET/"
-		IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
-		if [ "$PSET_PATHS" ]; then
-			for PKG_SET in $PSET_PATHS; do
-				echo "BUILDING 3 PACKAGELISTS"
-				read_packageset "../$PKG_SET"
-				start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $CONF_DEVICE
-			done
-		else
-			echo "BUILDING 1 PACKAGLIST"
-			start_build "$TARGET_LIST$IMAGEBUILDER" targets $CONF_DEVICE
-		fi
-		exit
-	fi
-	# otherwise, fetch all subtargets and build them one after another.
-		for subtarget in $(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/"); do
-			imagebuilder=$(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/$subtarget" | grep imagebuilder)
-			if [ "$PSET_PATHS" ]; then
-				for PKG_SET in $PSET_PATHS; do
-					echo "BUILDING 3 PACKAGELISTS"
-					read_packageset "../$PKG_SET"
-					start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder" $PKG_SET
-				done
-		    else
-				echo "BUILDING 1 PACKAGLIST"
-				start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder"
-		    fi
-	    done
-	exit
+    # there was given a release and a target
+    RELEASE_LINK=$(echo "$RELEASES" | tr ' ' '\n' | grep "$CONF_RELEASE" | tail -n 1)
+    # if there was defined a subtarget and option device, only build that.
+    if [ -n "$CONF_SUBTARGET" ]; then
+        # build directly that subtarget. if requested, for all image types.
+        TARGET_LIST="$RELEASE_LINK$CONF_TARGET/$CONF_SUBTARGET/"
+        IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
+        if [ "$PSET_PATHS" ]; then
+            for PKG_SET in $PSET_PATHS; do
+                echo "BUILDING 3 PACKAGELISTS"
+                read_packageset "../$PKG_SET"
+                start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $CONF_DEVICE
+            done
+        else
+            echo "BUILDING 1 PACKAGLIST"
+            start_build "$TARGET_LIST$IMAGEBUILDER" targets $CONF_DEVICE
+        fi
+        exit
+    fi
+    # otherwise, fetch all subtargets and build them one after another.
+    for subtarget in $(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/"); do
+        imagebuilder=$(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/$subtarget" | grep imagebuilder)
+        if [ "$PSET_PATHS" ]; then
+            for PKG_SET in $PSET_PATHS; do
+                echo "BUILDING 3 PACKAGELISTS"
+                read_packageset "../$PKG_SET"
+                start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder" $PKG_SET
+            done
+        else
+            echo "BUILDING 1 PACKAGLIST"
+            start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder"
+        fi
+    done
+    exit
 fi
