@@ -400,6 +400,13 @@ CONF_TARGET="$PARSER_TARGET"
 CONF_SUBTARGET="$PARSER_SUBTARGET"
 CONF_DEVICE="$PARSER_PROFILE"
 
+# if openwrt_base is "master": change to "snapshots". That is the correct
+# directory for downloading openwrt-master
+if [ $FREIFUNK_OPENWRT_BASE == "master" ]; then
+    RELEASE_LINK_BASE="https://downloads.openwrt.org/"
+    FREIFUNK_OPENWRT_BASE="snapshots"
+fi
+
 if [ -z "$CONF_RELEASE" ] && [ -z "$CONF_TARGET" ]; then
     # build all targets for all releases
     for release in $RELEASES; do
