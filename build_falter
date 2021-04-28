@@ -15,7 +15,8 @@ RELEASES="
     https://downloads.openwrt.org/snapshots/targets/"
 
 # General variables
-FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed/"
+FALTER_FEEDS="`dirname "$(readlink -f "$0")"`/feeds_base.conf"
+FALTER_REPO_ADD=""
 FREIFUNK_RELEASE=""
 
 ##################
@@ -89,7 +90,7 @@ while :; do
 
     d* | -development)
         echo "using dev-feeds."
-        FALTER_REPO_BASE="$FALTER_REPO_BASE""new/"
+        FALTER_REPO_ADD="$FALTER_REPO_ADD""new/"
         ;;
 
     p* | -packageset)
@@ -201,11 +202,22 @@ done
 
 # repository derives directly from the falter-version. Download freifunk_release
 # file and determine openwrt-version by its variables
-BASE_URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f 3)
-FEEDURL="$BASE_URL$PARSER_FALTER_VERSION/packages/mips_24kc/falter/"
-COMMONFILEURL=$FEEDURL$(curl -s ${FEEDURL}/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
-TMP=$(curl -s $COMMONFILEURL | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
-eval $TMP
+REPO_BASE=`head -n1 "$FALTER_FEEDS"`
+KEY="${REPO_BASE%% *}"
+REPO_BASE="${REPO_BASE#* }"
+REPO_NAME="${REPO_BASE#* }"
+REPO_NAME="${REPO_NAME%% *}"
+REPO_URL="${REPO_BASE##* }"
+if [[ "$KEY" != "" ]] && [[ $KEY != \#* ]]; then
+    FEEDURL="${REPO_URL}${FALTER_REPO_ADD}${PARSER_FALTER_VERSION}/packages/mips_24kc/${REPO_NAME}"
+    echo $FEEDURL
+    COMMONFILEURL=$FEEDURL"/"$(curl -s ${FEEDURL}/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
+    echo $COMMONFILEURL
+    TMP=$(curl -s $COMMONFILEURL | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
+    if [ "$TMP" != "" ]; then
+        eval $TMP
+    fi
+fi
 
 #################
 #   FUNCTIONS   #
@@ -276,8 +288,11 @@ function generate_embedded_files {
 
     ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_REVISION
     ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
-    export REPO # export repo line to inject into images. contains whitespace...
-    ../../scripts/04-include-falter-feed.sh
+    export FALTER_FEEDS # export repo lines to inject into images. contains whitespace...
+    export FALTER_REPO_ADD
+    export PARSER_FALTER_VERSION
+    export INSTR_SET
+    ../../scripts/04-include-falter-feeds.sh
 }
 
 function start_build {
@@ -327,14 +342,24 @@ function start_build {
     INSTR_SET=$(grep "openwrt_base" repositories.conf | awk -F'/' "{print \$$ispos}")
     echo "selected instruction set: $INSTR_SET"
 
-    REPO="$FALTER_REPO_BASE/$PARSER_FALTER_VERSION/packages/$INSTR_SET/falter"
-    echo "injecting repo line: $REPO"
-    echo "$REPO" >>repositories.conf
+    mkdir -p keys
+    cat "$FALTER_FEEDS" | while read REPO_BASE ; do
+        KEY="${REPO_BASE%% *}"
+        REPO_BASE="${REPO_BASE#* }"
+        REPO_NAME="${REPO_BASE#* }"
+        REPO_NAME="${REPO_NAME%% *}"
+        REPO_URL="${REPO_BASE##* }"
+        if [[ "$KEY" != "" ]] && [[ $KEY != \#* ]]; then
+            echo REPO $KEY: $REPO_BASE
+            REPO="${REPO_BASE}${FALTER_REPO_ADD}${PARSER_FALTER_VERSION}/packages/$INSTR_SET/${REPO_NAME}"
+            echo "injecting repo line: $REPO"
+            echo "$REPO" >> repositories.conf
 
-    # the hexadecimal number represents the fringerprint of the key. Refer to third section of https://openwrt.org/docs/guide-user/security/keygen#generate_usign_key_pair
-    local URL="http://buildbot.berlin.freifunk.net/buildbot/feed/packagefeed_master.pub"
-    echo "loading package-feed key from $URL"
-    curl "$URL" >keys/61a078a38408e710
+            local URL="${REPO_URL}packagefeed_master.pub"
+            echo "loading package-feed key from $URL"
+            curl "$URL" > keys/$KEY
+        fi
+    done
 
     generate_embedded_files $BRANCH
     if [ -z $DEVICE ]; then
