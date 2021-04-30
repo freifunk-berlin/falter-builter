@@ -274,8 +274,8 @@ function generate_embedded_files {
     [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
     [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
 
-    ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_REVISION
-    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
+    ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FREIFUNK_REVISION
+    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh
 }
