@@ -15,7 +15,7 @@ printf \
  | | | | |  __/ | | | |_| | | | |   <
  \_| |_|  \___|_|_|  \__,_|_| |_|_|\_\ 
 
- Firmware Berlin ($NICKNAME v$VERSION - $REVISION)
+ Firmware Berlin (v$VERSION - $REVISION)
    $TARGET - $SUBTARGET
  https://wiki.freifunk.net/Berlin:Firmware
  https://github.com/Freifunk-Spalter/
