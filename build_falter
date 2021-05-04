@@ -4,8 +4,6 @@
 # memory of a single 4MB-Device exceeds.
 # set -e
 
-# get some build-config
-source buildconfig.conf
 
 RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
 RELEASES="
