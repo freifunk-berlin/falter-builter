@@ -306,6 +306,7 @@ function start_build {
     cd $FOLDERNAME
     # patch json-info, so that it will contain every image, not just the last one
     cp -f ../../patches/json_overview_image_info.py scripts/json_overview_image_info.py
+    patch -p2 -i ../../patches/workaround-kernel2minor-path-length-limitation.patch
 
     if [ "$PARSER_LIST_ROUTERS" == "y" ]; then
         # if ask for, show avaiable router-profiles and quit
