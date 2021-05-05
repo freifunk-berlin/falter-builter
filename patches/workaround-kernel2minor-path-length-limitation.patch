@@ -1,0 +1,15 @@
+--- a/openwrt-imagebuilder-21.02-SNAPSHOT-ipq40xx-mikrotik.Linux-x86_64/include/image-commands.mk	2021-05-05 10:22:36.000000000 +0200
++++ b/openwrt-imagebuilder-21.02-SNAPSHOT-ipq40xx-mikrotik.Linux-x86_64/include/image-commands.mk	2021-05-05 10:26:49.000000000 +0200
+@@ -240,8 +240,10 @@
+ endef
+ 
+ define Build/kernel2minor
+-	kernel2minor -k $@ -r $@.new $(1)
+-	mv $@.new $@
++	$(eval temp_file := $(shell mktemp))
++	cp $@ $(temp_file)
++	kernel2minor -k $(temp_file) -r /tmp/bar $(1)
++	mv $(temp_file) $@
+ endef
+ 
+ define Build/kernel-bin
