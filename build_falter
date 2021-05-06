@@ -209,6 +209,15 @@ eval $TMP
 #   FUNCTIONS   #
 #################
 
+function patch_buildsystem() {
+    # applies some patches to the buildsystem to allow us building falter in our way.
+
+    # patch json-info, so that it will contain every image, not just the last one
+    cp -f ../../patches/json_overview_image_info.py scripts/json_overview_image_info.py
+    # fix patch at building mikrotik devices. prepones https://github.com/openwrt/openwrt/pull/3262
+    patch -p2 -i ../../patches/workaround-kernel2minor-path-length-limitation.patch
+}
+
 function derive_packagelist_version {
     # OpenWrt-Version from freifunk-release file could be something like
     # '19.07-SNAPSHOT'. But we have only packagelists for 19.07... Solve that.
@@ -304,9 +313,7 @@ function start_build {
     tar -xJf $FILENAME
 
     cd $FOLDERNAME
-    # patch json-info, so that it will contain every image, not just the last one
-    cp -f ../../patches/json_overview_image_info.py scripts/json_overview_image_info.py
-    patch -p2 -i ../../patches/workaround-kernel2minor-path-length-limitation.patch
+    patch_buildsystem
 
     if [ "$PARSER_LIST_ROUTERS" == "y" ]; then
         # if ask for, show avaiable router-profiles and quit
