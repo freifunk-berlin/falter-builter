@@ -213,7 +213,7 @@ function patch_buildsystem() {
     # applies some patches to the buildsystem to allow us building falter in our way.
 
     # patch json-info, so that it will contain every image, not just the last one
-    cp -f ../../patches/json_overview_image_info.py scripts/json_overview_image_info.py
+    patch -p1 -i ../../patches/append_new_images_overview_json.patch
     # fix patch at building mikrotik devices. prepones https://github.com/openwrt/openwrt/pull/3262
     patch -p2 -i ../../patches/workaround-kernel2minor-path-length-limitation.patch
 }
