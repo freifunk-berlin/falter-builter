@@ -1,8 +1,7 @@
 VERSION="$1"
-NICKNAME="$2"
-TARGET="$3"
-SUBTARGET="$4"
-REVISION="$5"
+TARGET="$2"
+SUBTARGET="$3"
+REVISION="$4"
 # get current path of script. Thus we can call the script from everywhere.
 SCRIPTPATH=$(dirname $(readlink -f "$0"))
 
@@ -16,7 +15,7 @@ printf \
  | | | | |  __/ | | | |_| | | | |   <
  \_| |_|  \___|_|_|  \__,_|_| |_|_|\_\ 
 
- Firmware Berlin ($NICKNAME v$VERSION - $REVISION)
+ Firmware Berlin (v$VERSION - $REVISION)
    $TARGET - $SUBTARGET
  https://wiki.freifunk.net/Berlin:Firmware
  https://github.com/Freifunk-Spalter/

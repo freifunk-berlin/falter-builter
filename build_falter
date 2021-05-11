@@ -4,8 +4,6 @@
 # memory of a single 4MB-Device exceeds.
 # set -e
 
-# get some build-config
-source buildconfig.conf
 
 RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
 RELEASES="
@@ -223,6 +221,15 @@ fi
 #   FUNCTIONS   #
 #################
 
+function patch_buildsystem() {
+    # applies some patches to the buildsystem to allow us building falter in our way.
+
+    # patch json-info, so that it will contain every image, not just the last one
+    patch -p1 -i ../../patches/append_new_images_overview_json.patch
+    # fix patch at building mikrotik devices. prepones https://github.com/openwrt/openwrt/pull/3262
+    patch -p2 -i ../../patches/workaround-kernel2minor-path-length-limitation.patch
+}
+
 function derive_packagelist_version {
     # OpenWrt-Version from freifunk-release file could be something like
     # '19.07-SNAPSHOT'. But we have only packagelists for 19.07... Solve that.
@@ -286,13 +293,15 @@ function generate_embedded_files {
     [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
     [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
 
-    ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FREIFUNK_REVISION
-    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $NICKNAME $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
+    ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FREIFUNK_REVISION
+    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
     export FALTER_FEEDS # export repo lines to inject into images. contains whitespace...
     export FALTER_REPO_ADD
     export PARSER_FALTER_VERSION
     export INSTR_SET
+    export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feeds.sh
+
 }
 
 function start_build {
@@ -321,8 +330,7 @@ function start_build {
     tar -xJf $FILENAME
 
     cd $FOLDERNAME
-    # patch json-info, so that it will contain every image, not just the last one
-    cp -f ../../patches/json_overview_image_info.py scripts/json_overview_image_info.py
+    patch_buildsystem
 
     if [ "$PARSER_LIST_ROUTERS" == "y" ]; then
         # if ask for, show avaiable router-profiles and quit
