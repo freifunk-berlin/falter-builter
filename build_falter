@@ -433,7 +433,7 @@ CONF_DEVICE="$PARSER_PROFILE"
 
 # if openwrt_base is "master": change to "snapshots". That is the correct
 # directory for downloading openwrt-master
-if [ $FREIFUNK_OPENWRT_BASE == "master" ]; then
+if [ "$FREIFUNK_OPENWRT_BASE" == "master" ] || [ "$PARSER_OWT" == "snapshot" ]; then
     RELEASE_LINK_BASE="https://downloads.openwrt.org/"
     FREIFUNK_OPENWRT_BASE="snapshots"
 fi
