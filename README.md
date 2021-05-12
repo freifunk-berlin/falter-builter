@@ -51,6 +51,10 @@ The profile name is at the first line. Omit the colon:
 ./build_falter -p packageset/19.07/tunneldigger.txt -v 1.1.1-snapshot -t ath79 -s generic -r glinet_gl-ar150
 ```
 
+## Customization: Include personal feeds
+
+The builter script can add personal package-feeds to the opkg-configuration of your images. To use that feature, add your own feed in one line at the `feeds_base.conf` file.
+
 ## Use builter with buildbot
 
 For the image generation with buildbot, builter should be invoked like this:
