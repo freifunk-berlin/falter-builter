@@ -201,6 +201,10 @@ done
 # file and determine openwrt-version by its variables
 BASE_URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f 3)
 FEEDURL="$BASE_URL$PARSER_FALTER_VERSION/packages/mips_24kc/falter/"
+if ! curl --silent --fail "$FEEDURL" >/dev/null; then
+    echo "Error: failed retrieving feed URL. Wrong version '$PARSER_FALTER_VERSION'?"
+    exit 2
+fi
 COMMONFILEURL=$FEEDURL$(curl -s ${FEEDURL}/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
 TMP=$(curl -s $COMMONFILEURL | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
 eval $TMP
