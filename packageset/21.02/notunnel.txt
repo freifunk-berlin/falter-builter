@@ -26,6 +26,8 @@ firewall
 iwinfo
 libiwinfo-lua
 tcpdump-mini
+libustream-openssl
+ca-certificates
 
 # falter Common
 falter-common

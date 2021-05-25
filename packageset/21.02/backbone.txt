@@ -13,6 +13,8 @@ falter-berlin-uhttpd-defaults
 # Common
 #dnsmasq is already provided via dnsmasq-full
 -dnsmasq
+libustream-openssl
+ca-certificates
 
 # falter Common
 falter-common
