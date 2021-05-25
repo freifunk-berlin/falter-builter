@@ -213,13 +213,20 @@ eval $TMP
 #   FUNCTIONS   #
 #################
 
+function patch_if_needed() {
+    # check if a patch has already been applied (i.e. it's been merged upstream (for some versions))
+    # and apply it only if it has not
+    patch -f -s -R --dry-run -p${2:-1} -i "$1" >/dev/null || \
+    patch -f -p${2:-1} -i "$1"
+}
+
 function patch_buildsystem() {
     # applies some patches to the buildsystem to allow us building falter in our way.
 
     # patch json-info, so that it will contain every image, not just the last one
-    patch -p1 -i ../../patches/append_new_images_overview_json.patch
+    patch_if_needed ../../patches/append_new_images_overview_json.patch
     # fix patch at building mikrotik devices. prepones https://github.com/openwrt/openwrt/pull/3262
-    patch -p2 -i ../../patches/workaround-kernel2minor-path-length-limitation.patch
+    patch_if_needed ../../patches/workaround-kernel2minor-path-length-limitation.patch 2
 }
 
 function derive_packagelist_version {
