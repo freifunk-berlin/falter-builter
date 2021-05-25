@@ -27,6 +27,8 @@ firewall
 iwinfo
 libiwinfo-lua
 tcpdump-mini
+libustream-openssl
+ca-certificates
 
 # falter Common
 falter-common
@@ -39,8 +41,6 @@ falter-berlin-tunneldigger
 # GUI-basics
 uhttpd
 uhttpd-mod-ubus
-px5g-mbedtls
-libustream-mbedtls
 luci
 luci-app-ffwizard-falter
 luci-mod-falter
