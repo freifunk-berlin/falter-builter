@@ -39,6 +39,7 @@ uhttpd
 uhttpd-mod-ubus
 luci
 luci-ssl
+luci-compat
 luci-app-ffwizard-falter
 luci-mod-falter
 luci-app-olsr

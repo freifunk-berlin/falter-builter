@@ -35,6 +35,7 @@ uhttpd
 uhttpd-mod-ubus
 luci
 luci-ssl
+luci-compat
 luci-mod-falter
 luci-app-olsr
 luci-app-opkg
