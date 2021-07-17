@@ -319,6 +319,7 @@ function start_build {
     cp ../imagebuilder_cache/$FILENAME $FILENAME
 
     echo $PWD
+    echo "Extracting imagebuilder..."
 
     rm -rf $FOLDERNAME
     tar -xJf $FILENAME
@@ -349,9 +350,12 @@ function start_build {
     echo "$REPO" >>repositories.conf
 
     # the hexadecimal number represents the fringerprint of the key. Refer to third section of https://openwrt.org/docs/guide-user/security/keygen#generate_usign_key_pair
-    local URL="http://buildbot.berlin.freifunk.net/buildbot/feed/packagefeed_master.pub"
+    local URL="https://firmware.berlin.freifunk.net/feed/packagefeed_master.pub"
     echo "loading package-feed key from $URL"
-    curl "$URL" >keys/61a078a38408e710
+    curl -L "$URL" > keys/61a078a38408e710
+    # check, if we really got a key
+    grep "untrusted comment:" keys/61a078a38408e710 > /dev/null
+    if [ $? != 0 ]; then echo -e "\nThe loaded file obviously doesn't contain a valid key!\n"; exit 2; fi
 
     generate_embedded_files $BRANCH
     if [ -z $DEVICE ]; then
