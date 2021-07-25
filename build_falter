@@ -356,7 +356,7 @@ function start_build {
     curl "$URL" > keys/61a078a38408e710
     # check, if we really got a key
     grep "untrusted comment:" keys/61a078a38408e710 > /dev/null
-    if [ $? != 0 ]; then echo -e "\nThe loaded file obviously doesn't contain a valid key!\n"; exit 2; fi
+    if [ $? != 0 ]; then echo -e "\nThe loaded file apparently doesn't contain a valid key!\n"; exit 2; fi
 
     generate_embedded_files $BRANCH
     if [ -z $DEVICE ]; then
