@@ -352,6 +352,7 @@ function start_build {
     # the hexadecimal number represents the fringerprint of the key. Refer to third section of https://openwrt.org/docs/guide-user/security/keygen#generate_usign_key_pair
     local URL="https://firmware.berlin.freifunk.net/feed/packagefeed_master.pub"
     echo "loading package-feed key from $URL"
+    mkdir -p keys
     curl -L "$URL" > keys/61a078a38408e710
     # check, if we really got a key
     grep "untrusted comment:" keys/61a078a38408e710 > /dev/null
