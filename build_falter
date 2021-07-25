@@ -323,9 +323,12 @@ function start_build {
 
     rm -rf $FOLDERNAME
     tar -xJf $FILENAME
+    echo "done."
 
     cd $FOLDERNAME
+    echo "start patching imagebuilder..."
     patch_buildsystem
+    echo "done."
 
     if [ "$PARSER_LIST_ROUTERS" == "y" ]; then
         # if ask for, show avaiable router-profiles and quit
@@ -370,7 +373,7 @@ function start_build {
 
             make image PROFILE="$profile" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
             PACKAGE_SET_DEVICE="" # empty packageset for use with next wave1-device
-            echo "finished"
+            echo "finished."
         done
     else
         echo "start building $DEVICE..."
@@ -460,12 +463,12 @@ else
         IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
         if [ "$PSET_PATHS" ]; then
             for PKG_SET in $PSET_PATHS; do
-                echo "BUILDING 3 PACKAGELISTS"
+                echo "building three packagelists..."
                 read_packageset "../$PKG_SET"
                 start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $CONF_DEVICE
             done
         else
-            echo "BUILDING 1 PACKAGLIST"
+            echo "building one packagelist only..."
             start_build "$TARGET_LIST$IMAGEBUILDER" targets $CONF_DEVICE
         fi
         exit
@@ -475,12 +478,12 @@ else
         imagebuilder=$(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/$subtarget" | grep imagebuilder)
         if [ "$PSET_PATHS" ]; then
             for PKG_SET in $PSET_PATHS; do
-                echo "BUILDING 3 PACKAGELISTS"
+                echo "building three packagelists..."
                 read_packageset "../$PKG_SET"
                 start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder" $PKG_SET
             done
         else
-            echo "BUILDING 1 PACKAGLIST"
+            echo "building one packagelist only..."
             start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder"
         fi
     done
