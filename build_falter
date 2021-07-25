@@ -353,7 +353,7 @@ function start_build {
     local URL="https://firmware.berlin.freifunk.net/feed/packagefeed_master.pub"
     echo "loading package-feed key from $URL"
     mkdir -p keys
-    curl -L "$URL" > keys/61a078a38408e710
+    curl "$URL" > keys/61a078a38408e710
     # check, if we really got a key
     grep "untrusted comment:" keys/61a078a38408e710 > /dev/null
     if [ $? != 0 ]; then echo -e "\nThe loaded file obviously doesn't contain a valid key!\n"; exit 2; fi
