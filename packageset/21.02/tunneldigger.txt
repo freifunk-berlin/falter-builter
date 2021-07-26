@@ -72,6 +72,7 @@ luci-i18n-falter-policyrouting-en
 
 # OLSR
 olsrd
+olsrd-utils
 olsrd-mod-arprefresh
 olsrd-mod-dyn-gw
 olsrd-mod-jsoninfo
