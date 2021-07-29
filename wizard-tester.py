@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+from io import SEEK_CUR
 from selenium import webdriver
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 import argparse
 from argparse import RawTextHelpFormatter
@@ -99,7 +101,7 @@ for option in opt:
 # check, if all mandatory values were given
 mandatory = ["passwd", "hostname", "radio0", "dhcp"]
 for param in mandatory:
-    if not opt.get(param):
+    if not opt.get(param) and not configs.get(param):
         print("Didn't get enough information for configuring your freifunk-node.\nI need at least:\n\t* passwd\n\t* hostname\n\t* mesh-ip-radio0\n\t* ip-dhcp\n\nThe rest, I'll fill with standard-values.")
         exit(1)
 
@@ -119,19 +121,26 @@ browser.implicitly_wait(1)
 
 # call LuCI-interface and wait unti its loaded
 browser.get(luci_webaddress)
-sleep(luci_timeout_long)
+
 # figure out success via checking pagetitle fo "LuCI"
-try:
-    assert "LuCI" in browser.title, "connecting to "+luci_webaddress+" failed!"
-except:
-    print("connecting to " + luci_webaddress + " failed!")
-    print("exiting...")
-    exit(1)
+error_count = 0
+while "LuCI" not in browser.title:
+    sleep(2)
+    error_count += 1
+    if error_count > 12:
+        print("connecting to " + luci_webaddress + " failed!")
+        print("exiting...")
+        exit(1)
 
+# password field appears slightly late
+pw_0, pw_1 = None, None
+while not pw_0:
+    try:
+        pw_0 = browser.find_element_by_name("cbid.ffwizward.1.pw1")
+        pw_1 = browser.find_element_by_name("cbid.ffwizward.1.pw2")
+    except:
+        sleep(luci_timeout)
 
-# set password
-pw_0 = browser.find_element_by_name("cbid.ffwizward.1.pw1")
-pw_1 = browser.find_element_by_name("cbid.ffwizward.1.pw2")
 
 pw_0.send_keys(configs.get("passwd"))
 pw_1.send_keys(configs.get("passwd"))
@@ -141,9 +150,10 @@ click_next(browser)
 sleep(2)
 
 # select community
-if args.community:
-    id_string = "cbid.ffwizward.1.net-" + args.community
-    community = browser.find_element_by_id("cbid.ffwizward.1.net-fuerstenwalde").click()
+if args.community or configs.get("community"):
+    community = args.community or configs.get("community")
+    dropdown = Select(browser.find_element_by_id("widget.cbid.ffwizward.1.net"))
+    dropdown.select_by_value(community)
 
 # put data into fields
 hostname = browser.find_element_by_name("cbid.ffwizward.1.hostname")
@@ -156,12 +166,18 @@ lon = browser.find_element_by_name("cbid.ffwizward.1.lon")
 
 hostname.clear()
 hostname.send_keys(configs.get("hostname"))
-nickname.send_keys(configs.get("nickname"))
-realname.send_keys(configs.get("realname"))
-contact.send_keys(configs.get("contact"))
-location.send_keys(configs.get("location"))
-lat.send_keys(configs.get("lat"))
-lon.send_keys(configs.get("lon"))
+if configs.get("nickname"):
+    nickname.send_keys(configs.get("nickname"))
+if configs.get("realname"):
+    realname.send_keys(configs.get("realname"))
+if configs.get("contact"):
+    contact.send_keys(configs.get("contact"))
+if configs.get("location"):
+    location.send_keys(configs.get("location"))
+if configs.get("lat"):
+    lat.send_keys(configs.get("lat"))
+if configs.get("lon"):
+    lon.send_keys(configs.get("lon"))
 
 click_next(browser)
 
