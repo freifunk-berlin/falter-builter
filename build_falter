@@ -202,12 +202,12 @@ while :; do
     fi
 done
 
-
-# ToDo: check for complete input:
-# -packagelists given?
-# falter-version given
-
-
+# check if we got all options we would need.
+if [ -z "$PARSER_FALTER_VERSION" ]; then echo "Please specify a falter-version with '-v'."; OPTION_MISSING=1; fi
+if [ -z "$PARSER_TARGET" ]; then echo "Please give a target with '-t'."; OPTION_MISSING=1; fi
+if [ -z "$PARSER_SUBTARGET" ]; then echo "Please give a subtarget with option '-s'."; OPTION_MISSING=1; fi
+if [ -z "$PARSER_PACKAGESET" ]; then echo "Please specify a packageset with option '-p'."; OPTION_MISSING=1; fi
+if [ "$OPTION_MISSING" == 1 ]; then echo "Exiting..."; exit 1; fi
 
 # check for dependencies.
 SCRIPT_DEPENDS="awk curl gawk grep git gettext python3 rsync sed unzip wget"
