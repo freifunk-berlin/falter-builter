@@ -33,6 +33,7 @@ falter-common
 falter-common-olsr
 falter-policyrouting
 falter-profiles
+falter-berlin-ssid-changer
 
 # GUI-basics
 uhttpd

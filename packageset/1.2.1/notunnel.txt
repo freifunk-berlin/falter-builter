@@ -32,6 +32,7 @@ falter-common
 falter-common-olsr
 falter-policyrouting
 falter-profiles
+falter-berlin-ssid-changer
 # allow upgrade from one type to another
 falter-berlin-tunneldigger
 
