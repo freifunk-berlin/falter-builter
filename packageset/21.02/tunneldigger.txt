@@ -78,7 +78,6 @@ olsrd-mod-dyn-gw
 olsrd-mod-jsoninfo
 olsrd-mod-txtinfo
 olsrd-mod-nameservice
-olsrd-mod-watchdog
 kmod-ipip
 
 # BATMAN
