@@ -28,7 +28,6 @@ configs = {
 }
 
 
-
 ##############################
 #    Argument-paser stuff    #
 ##############################
@@ -54,9 +53,10 @@ parser.add_argument('-n', '--hostname', type=str,
 parser.add_argument('--nickname', type=str, help="your nickname")
 parser.add_argument('--realname', type=str, help="your real name")
 parser.add_argument('-c', '--contact', type=str,
-                    help="""contact data of the operator. Give an e-mail-address or the link for 
+                    help="""contact data of the operator. Give an e-mail-address or the link for
 your personal e-mail-form from config.berlin.freifunk.net""")
-parser.add_argument('--community', type=str, help="select another community-profile than standard")
+parser.add_argument('--community', type=str,
+                    help="select another community-profile than standard")
 parser.add_argument('-l', '--location', type=str,
                     help="description of routers location (e.g. address)")
 parser.add_argument('-x', '--lat', type=str,
@@ -71,7 +71,8 @@ parser.add_argument('--download', type=str,
                     help="bandwidth-limit for sharing your net")
 parser.add_argument('--monitoring-off', action="store_true",
                     help="deactivate sending statistics to monitor.berlin.freifunk.net")
-parser.add_argument('--adhoc', action="store_true", help="use deprecated ad-hoc as mesh-technology")
+parser.add_argument('--adhoc', action="store_true",
+                    help="use deprecated ad-hoc as mesh-technology")
 parser.add_argument('-d', '--dhcp', type=str,
                     help="ip-address of DHCP-Network from the mail.")
 parser.add_argument('-r', '--radio0', type=str,
@@ -104,7 +105,6 @@ for param in mandatory:
     if not opt.get(param) and not configs.get(param):
         print("Didn't get enough information for configuring your freifunk-node.\nI need at least:\n\t* passwd\n\t* hostname\n\t* mesh-ip-radio0\n\t* ip-dhcp\n\nThe rest, I'll fill with standard-values.")
         exit(1)
-
 
 
 ##############################
@@ -152,7 +152,8 @@ sleep(2)
 # select community
 if args.community or configs.get("community"):
     community = args.community or configs.get("community")
-    dropdown = Select(browser.find_element_by_id("widget.cbid.ffwizward.1.net"))
+    dropdown = Select(browser.find_element_by_id(
+        "widget.cbid.ffwizward.1.net"))
     dropdown.select_by_value(community)
 
 # put data into fields
