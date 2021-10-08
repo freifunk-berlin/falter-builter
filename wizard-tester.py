@@ -184,12 +184,22 @@ click_next(browser)
 # decide on dsl yes/no
 if configs.get("sharenet_off"):
     # click "Am Freifunknetz teilnehmen"
-    browser.find_element_by_link_text("Am Freifunk-Netz teilnehmen").click()
+    try:
+        browser.find_element_by_link_text(
+            "Am Freifunk-Netz teilnehmen").click()
+    except:
+        browser.find_element_by_link_text(
+            "Participate in the Freifunk-Network").click()
+
 
 else:
     # click "Am Freifunknetz teilnehmen und Internet teilen"
-    elem = browser.find_element_by_link_text(
-        "Am Freifunk-Netz teilnehmen und Internet teilen").click()
+    try:
+        elem = browser.find_element_by_link_text(
+            "Am Freifunk-Netz teilnehmen und Internet teilen").click()
+    except:
+        elem = browser.find_element_by_link_text(
+            "Participate in the Freifunk-Network and share Internet").click()
 
     # configure bandwidth of sharenet
     bw_down = browser.find_element_by_name(
