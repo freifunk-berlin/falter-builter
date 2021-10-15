@@ -318,6 +318,7 @@ function generate_embedded_files {
     ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh
+    ../../scripts/05-olsrd-init-for-21-02-0.sh $FALTERBRANCH
 }
 
 function start_build {
