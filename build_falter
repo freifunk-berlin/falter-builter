@@ -355,8 +355,10 @@ function start_build {
     echo $PWD
     echo "Extracting imagebuilder..."
 
-    rm -rf $FOLDERNAME
+    rm -rf $FOLDERNAME ib
     tar -xJf $FILENAME
+    mv $FOLDERNAME ib
+    FOLDERNAME="ib"
     echo "done."
 
     cd $FOLDERNAME
