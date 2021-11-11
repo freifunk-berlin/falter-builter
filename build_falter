@@ -309,6 +309,9 @@ function generate_embedded_files {
     local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
     local SUBTARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 8)
 
+    local OPENWRT_BASE=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 5) 
+    echo "OPENWRT_BASE $OPENWRT_BASE"
+
     # Get the FREIFUNK_RELEASE variable from the falter feed
     # located in the falter-common package.
     [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
@@ -318,7 +321,8 @@ function generate_embedded_files {
     ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh
-    ../../scripts/05-olsrd-init-for-21-02-0.sh $FALTERBRANCH
+    ../../scripts/05-olsrd-init-for-21-02-0.sh $OPENWRT_BASE
+    ../../scripts/06-luci-base-networkjs.sh $OPENWRT_BASE
 }
 
 function start_build {
@@ -339,6 +343,7 @@ function start_build {
     [ -z $BRANCH ] && BRANCH="snapshot"
     echo "building using: $IMAGE_BUILDER_URL"
     echo "selected branch: $BRANCH"
+    echo "FILENAME $FILENAME FOLDERNAME $FOLDERNAME BRANCH $BRANCH PKG_SET $PKG_SET"
 
     if [ -z $IMAGE_BUILDER_PATH ]; then
       # store imagebuilders in cache. Reload, if there is a newer version avaiable
