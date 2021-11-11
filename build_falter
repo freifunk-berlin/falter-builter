@@ -317,7 +317,11 @@ function generate_embedded_files {
     [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
     [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
 
+    # clear out any old embedded_files
+    rm -rf ../../embedded-files/*
+
     ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FREIFUNK_REVISION
+    ../../scripts/02-favicon.sh
     ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh
