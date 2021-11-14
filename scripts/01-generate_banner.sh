@@ -18,12 +18,12 @@ printf \
  Firmware Berlin (v$VERSION - $REVISION)
    $TARGET - $SUBTARGET
  https://wiki.freifunk.net/Berlin:Firmware
- https://github.com/Freifunk-Spalter/
+ https://github.com/freifunk-berlin/falter-packages
  -----------------------------------------------------
 
  If you find bugs please report them at:
 
-   https://github.com/Freifunk-Spalter/packages/issues/
+   https://github.com/freifunk-berlin/falter-packages/issues/
 
  For questions write a mail to <berlin@berlin.freifunk.net>
  or check https://berlin.freifunk.net/contact for our weekly meetings.
