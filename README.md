@@ -32,13 +32,13 @@ After the buildprocess finished, you will find the images in `firmwares/`.
 Lets assume you'd like to build a stable-release-tunneldigger-image for your GL-AR150 router. To achieve that, you should invoke the buildscript in that way:
 
 ```sh
-./build_falter -p packageset/19.07/tunneldigger.txt -v 1.1.1 ath79 -s generic -r glinet_gl-ar150
+./build_falter -p packageset/19.07/tunneldigger.txt -v 1.1.1 -t ath79 -s generic -r glinet_gl-ar150
 ```
 
 If you are more comfortable in memorizing it that way, you can use long arguments:
 
 ```sh
-./build_falter --packageset packageset/19.07/tunneldigger.txt --version 1.1.1 --target ath79 --sub-target generic -router glinet_gl-ar150
+./build_falter --packageset packageset/19.07/tunneldigger.txt --version 1.1.1 --target ath79 --sub-target generic --router glinet_gl-ar150
 ```
 
 ### Find your routers profile
