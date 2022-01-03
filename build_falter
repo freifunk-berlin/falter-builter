@@ -4,13 +4,7 @@
 # memory of a single 4MB-Device exceeds.
 # set -e
 
-
 RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
-RELEASES="
-    https://downloads.openwrt.org/releases/19.07.5/targets/
-    https://downloads.openwrt.org/releases/19.07.6/targets/
-    https://downloads.openwrt.org/releases/21.02-SNAPSHOT/targets/
-    https://downloads.openwrt.org/snapshots/targets/"
 
 # General variables
 FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed/"
@@ -153,7 +147,7 @@ while :; do
         fi
         ;;
 
-    i*|-image-builder)
+    i* | -image-builder)
         if [ "$2" ]; then
             echo "Use Custom Imagebuilder at: $2"
             IMAGE_BUILDER_PATH="$2"
@@ -203,11 +197,26 @@ while :; do
 done
 
 # check if we got all options we would need.
-if [ -z "$PARSER_FALTER_VERSION" ]; then echo "Please specify a falter-version with '-v'."; OPTION_MISSING=1; fi
-if [ -z "$PARSER_TARGET" ]; then echo "Please give a target with '-t'."; OPTION_MISSING=1; fi
-if [ -z "$PARSER_SUBTARGET" ]; then echo "Please give a subtarget with option '-s'."; OPTION_MISSING=1; fi
-if [ -z "$PARSER_PACKAGESET" ]; then echo "Please specify a packageset with option '-p'."; OPTION_MISSING=1; fi
-if [ "$OPTION_MISSING" == 1 ]; then echo "Exiting..."; exit 1; fi
+if [ -z "$PARSER_FALTER_VERSION" ]; then
+    echo "Please specify a falter-version with '-v'."
+    OPTION_MISSING=1
+fi
+if [ -z "$PARSER_TARGET" ]; then
+    echo "Please give a target with '-t'."
+    OPTION_MISSING=1
+fi
+if [ -z "$PARSER_SUBTARGET" ]; then
+    echo "Please give a subtarget with option '-s'."
+    OPTION_MISSING=1
+fi
+if [ -z "$PARSER_PACKAGESET" ]; then
+    echo "Please specify a packageset with option '-p'."
+    OPTION_MISSING=1
+fi
+if [ "$OPTION_MISSING" == 1 ]; then
+    echo "Exiting..."
+    exit 1
+fi
 
 # check for dependencies.
 SCRIPT_DEPENDS="awk curl gawk grep git gettext python3 rsync sed unzip wget"
@@ -221,15 +230,15 @@ done
 
 # repository derives directly from the falter-version. Download freifunk_release
 # file and determine openwrt-version by its variables
-BASE_URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f 3)
+BASE_URL=$(echo "$FALTER_REPO_BASE" | cut -d' ' -f 3)
 FEEDURL="$BASE_URL$PARSER_FALTER_VERSION/packages/mips_24kc/falter/"
 if ! curl --silent --fail "$FEEDURL" >/dev/null; then
     echo "Error: failed retrieving feed URL. Wrong version '$PARSER_FALTER_VERSION'?"
     exit 2
 fi
-COMMONFILEURL=$FEEDURL$(curl -s ${FEEDURL}/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
-TMP=$(curl -s $COMMONFILEURL | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
-eval $TMP
+COMMONFILEURL=$FEEDURL$(curl -s "${FEEDURL}"/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
+TMP=$(curl -s "$COMMONFILEURL" | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
+eval "$TMP"
 
 #################
 #   FUNCTIONS   #
@@ -238,8 +247,8 @@ eval $TMP
 function patch_if_needed() {
     # check if a patch has already been applied (i.e. it's been merged upstream (for some versions))
     # and apply it only if it has not
-    patch -f -s -R --dry-run -p${2:-1} -i "$1" >/dev/null || \
-    patch -f -p${2:-1} -i "$1"
+    patch -f -s -R --dry-run -p"${2:-1}" -i "$1" >/dev/null ||
+        patch -f -p"${2:-1}" -i "$1"
 }
 
 function patch_buildsystem() {
@@ -256,7 +265,7 @@ function derive_packagelist_version {
     # '19.07-SNAPSHOT'. But we have only packagelists for 19.07... Solve that.
     regex="^[0-9][0-9].[0-9][0-9]"
     if [[ $1 =~ $regex ]]; then
-        echo $(echo $1 | cut -c 1-5)
+        echo "$(echo "$1" | cut -c 1-5)"
     else
         echo "snapshot"
     fi
@@ -265,12 +274,12 @@ function derive_packagelist_version {
 function read_packageset {
     local PACKAGE_SET_PATH=$1
     # read packageset, while removing comments, empty lines and newlines
-    PACKAGE_SET=$(cat $PACKAGE_SET_PATH | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
+    PACKAGE_SET=$(cat "$PACKAGE_SET_PATH" | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
 }
 
 function fetch_subdirs {
     URL=$1
-    curl -s $URL | grep href | grep -v 'snapshots\|releases' | awk -F'"' '{print $4}'
+    curl -s "$URL" | grep href | grep -v 'snapshots\|releases' | awk -F'"' '{print $4}'
 }
 
 function is_wave1_device {
@@ -284,7 +293,7 @@ function is_wave1_device {
 
 function subsitute_ct_driver {
     # generate a packagelist with ct-drivers/firmware substituted by normal one
-    local DEVICE_PACKAGES="$@"
+    local DEVICE_PACKAGES="$*"
     echo "wave1 chipset detected..."
     echo "change firmware and drivers in packagelist to non-ct counterparts..."
     PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET"" $DEVICE_PACKAGES" | sed -e 's/ath10k-firmware-qca988x-ct/ath10k-firmware-qca988x -ath10k-firmware-qca988x-ct/g; s/ath10k-firmware-qca9887-ct/ath10k-firmware-qca9887 -ath10k-firmware-qca9887-ct/g; s/kmod-ath10k-ct/kmod-ath10k -kmod-ath10k-ct/g')
@@ -292,10 +301,10 @@ function subsitute_ct_driver {
 
 function derive_branch_from_url {
     URL=$1
-    RELEASE_TYPE=$(echo $URL | awk -F'/' '{print $4}')
+    RELEASE_TYPE=$(echo "$URL" | awk -F'/' '{print $4}')
     case $RELEASE_TYPE in
     releases)
-        echo $URL | awk -F'/' '{print $5}' | cut -d. -f1-2
+        echo "$URL" | awk -F'/' '{print $5}' | cut -d. -f1-2
         ;;
     snapshots)
         echo snapshot
@@ -306,27 +315,27 @@ function derive_branch_from_url {
 function generate_embedded_files {
     FALTERBRANCH="$1"
     # call scripts to generate dynamic data in embedded files
-    local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
-    local SUBTARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 8)
+    local TARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 7)
+    local SUBTARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 8)
 
-    local OPENWRT_BASE=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 5) 
+    local OPENWRT_BASE=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 5)
     echo "OPENWRT_BASE $OPENWRT_BASE"
 
     # Get the FREIFUNK_RELEASE variable from the falter feed
     # located in the falter-common package.
-    [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
-    [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
+    [ "snapshot" == "$FALTERBRANCH" ] && FALTERBRANCH="master"
+    [ "$FALTERBRANCH" != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
 
     # clear out any old embedded_files
     rm -rf ../../embedded-files/*
 
-    ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FREIFUNK_REVISION
+    ../../scripts/01-generate_banner.sh "$FREIFUNK_RELEASE $TARGET $SUBTARGET $FREIFUNK_REVISION"
     ../../scripts/02-favicon.sh
-    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
+    ../../scripts/03-luci-footer.sh "$FREIFUNK_RELEASE $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION"
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh
-    ../../scripts/05-olsrd-init-for-21-02-0.sh $OPENWRT_BASE
-    ../../scripts/06-luci-base-networkjs.sh $OPENWRT_BASE
+    ../../scripts/05-olsrd-init-for-21-02-0.sh "$OPENWRT_BASE"
+    ../../scripts/06-luci-base-networkjs.sh "$OPENWRT_BASE"
 }
 
 function start_build {
@@ -334,44 +343,44 @@ function start_build {
     echo "$IMAGE_BUILDER_PATH"
     echo "$1"
     if [ -n "$IMAGE_BUILDER_PATH" ]; then
-      IMAGE_BUILDER_URL=$IMAGE_BUILDER_PATH
+        IMAGE_BUILDER_URL=$IMAGE_BUILDER_PATH
     else
-      IMAGE_BUILDER_URL="$1"
+        IMAGE_BUILDER_URL="$1"
     fi
     local TMP=$2 # slice packageset-name from path
-    local PKG_SET=$(echo $TMP | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
+    local PKG_SET=$(echo "$TMP" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
     local DEVICE=$3
-    FILENAME=$(basename $IMAGE_BUILDER_URL)
-    FOLDERNAME=$(basename $FILENAME .tar.xz)
-    BRANCH=$(derive_branch_from_url $IMAGE_BUILDER_URL)
-    [ -z $BRANCH ] && BRANCH="snapshot"
+    FILENAME=$(basename "$IMAGE_BUILDER_URL")
+    FOLDERNAME=$(basename "$FILENAME" .tar.xz)
+    BRANCH=$(derive_branch_from_url "$IMAGE_BUILDER_URL")
+    [ -z "$BRANCH" ] && BRANCH="snapshot"
     echo "building using: $IMAGE_BUILDER_URL"
     echo "selected branch: $BRANCH"
     echo "FILENAME $FILENAME FOLDERNAME $FOLDERNAME BRANCH $BRANCH PKG_SET $PKG_SET"
 
-    if [ -z $IMAGE_BUILDER_PATH ]; then
-      # store imagebuilders in cache. Reload, if there is a newer version avaiable
-      local CACHE="../imagebuilder_cache"
-      if [ ! -d $CACHE ]; then mkdir -p $CACHE; fi
-      cd $CACHE
-      wget -N --no-if-modified-since $IMAGE_BUILDER_URL
-      cd ../build
-      # pull imagebuilder from cache-dir
-      cp ../imagebuilder_cache/$FILENAME $FILENAME
+    if [ -z "$IMAGE_BUILDER_PATH" ]; then
+        # store imagebuilders in cache. Reload, if there is a newer version avaiable
+        local CACHE="../imagebuilder_cache"
+        if [ ! -d $CACHE ]; then mkdir -p $CACHE; fi
+        cd $CACHE #|| echo "cd $CACHE failed!"; exit 1
+        wget -N --no-if-modified-since "$IMAGE_BUILDER_URL"
+        cd ../build #|| echo "cd ../build failed!"; exit 1
+        # pull imagebuilder from cache-dir
+        cp "../imagebuilder_cache/$FILENAME" "$FILENAME"
     else
-      cp ../$IMAGE_BUILDER_PATH $FILENAME
+        cp "../$IMAGE_BUILDER_PATH" "$FILENAME"
     fi
 
-    echo $PWD
+    echo "$PWD"
     echo "Extracting imagebuilder..."
 
-    rm -rf $FOLDERNAME ib
-    tar -xJf $FILENAME
-    mv $FOLDERNAME ib
+    rm -rf "$FOLDERNAME" ib
+    tar -xJf "$FILENAME"
+    mv "$FOLDERNAME" ib
     FOLDERNAME="ib"
     echo "done."
 
-    cd $FOLDERNAME
+    cd "$FOLDERNAME" #|| echo "cd $FOLDERNAME failed!"; exit 1
     echo "start patching imagebuilder..."
     patch_buildsystem
     echo "done."
@@ -407,18 +416,21 @@ function start_build {
     local URL="https://firmware.berlin.freifunk.net/feed/packagefeed_master.pub"
     echo "loading package-feed key from $URL"
     mkdir -p keys
-    curl "$URL" > keys/61a078a38408e710
+    curl "$URL" >keys/61a078a38408e710
     # check, if we really got a key
-    grep "untrusted comment:" keys/61a078a38408e710 > /dev/null
-    if [ $? != 0 ]; then echo -e "\nThe loaded file apparently doesn't contain a valid key!\n"; exit 2; fi
+    grep "untrusted comment:" keys/61a078a38408e710 >/dev/null
+    if [ $? != 0 ]; then
+        echo -e "\nThe loaded file apparently doesn't contain a valid key!\n"
+        exit 2
+    fi
 
     generate_embedded_files $BRANCH
-    if [ -z $DEVICE ]; then
+    if [ -z "$DEVICE" ]; then
         for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
             echo "start building $profile..."
 
-            is_wave1_device $profile
-            if [ -z $PACKAGE_SET_DEVICE ]; then
+            is_wave1_device "$profile"
+            if [ -z "$PACKAGE_SET_DEVICE" ]; then
                 PACKAGE_SET_DEVICE="$PACKAGE_SET"
             fi
 
@@ -429,8 +441,8 @@ function start_build {
     else
         echo "start building $DEVICE..."
 
-        is_wave1_device $DEVICE
-        if [ -z $PACKAGE_SET_DEVICE ]; then
+        is_wave1_device "$DEVICE"
+        if [ -z "$PACKAGE_SET_DEVICE" ]; then
             PACKAGE_SET_DEVICE="$PACKAGE_SET"
         fi
 
@@ -438,8 +450,8 @@ function start_build {
         PACKAGE_SET_DEVICE=""
     fi
     # move binaries into central firmware-dir, sort them for packagesets, there was given one.
-    if [ $PKG_SET ]; then
-        rsync -a --remove-source-files bin/targets/* ../../firmwares/$PKG_SET/
+    if [ "$PKG_SET" ]; then
+        rsync -a --remove-source-files bin/targets/* "../../firmwares/$PKG_SET/"
     else
         rsync -a --remove-source-files bin/targets/* ../../firmwares/
     fi
@@ -451,13 +463,13 @@ function start_build {
 #    MAIN    #
 ##############
 
-PARSER_OWT=$(derive_packagelist_version $FREIFUNK_OPENWRT_BASE)
+PARSER_OWT=$(derive_packagelist_version "$FREIFUNK_OPENWRT_BASE")
 
 if [ "$PARSER_PACKAGESET" == "all" ]; then
     # build all imageflavours. For this, get paths of packagesets
     # fetch paths of packagelists (depends on openwrt-version). If not unique, chose most recent version of possibilities.
     PSET_PATHS=$(find packageset | sort | grep -e "/$PARSER_OWT" | grep .txt | tail -n3)
-    echo $PSET_PATHS
+    echo "$PSET_PATHS"
     #exit
 else
     read_packageset "$PARSER_PACKAGESET"
@@ -468,7 +480,7 @@ mkdir -p firmwares
 rm -rf firmwares/*
 mkdir -p build
 rm -rf build/*
-cd build
+cd build #|| echo "cd build/ failed!"; exit 1
 
 # read command-line parameters
 CONF_RELEASE="$PARSER_OWT"
@@ -478,19 +490,18 @@ CONF_DEVICE="$PARSER_PROFILE"
 
 # if openwrt_base is "master": change to "snapshots". That is the correct
 # directory for downloading openwrt-master
-if [ $FREIFUNK_OPENWRT_BASE == "master" ]; then
+if [ "$FREIFUNK_OPENWRT_BASE" == "master" ]; then
     RELEASE_LINK_BASE="https://downloads.openwrt.org/"
     FREIFUNK_OPENWRT_BASE="snapshots"
 fi
-
 
 if [ -z "$CONF_TARGET" ] && [ -z "$IMAGE_BUILDER_PATH" ]; then
     # build one release for all targets
     RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
     for target in $(fetch_subdirs "$RELEASE_LINK"); do
-        for subtarget in $(fetch_subdirs $RELEASE_LINK$target); do
-            imagebuilder=$(fetch_subdirs $RELEASE_LINK$PARSER_PROFILE$target$subtarget | grep imagebuilder)
-            start_build $RELEASE_LINK$target$subtarget$imagebuilder
+        for subtarget in $(fetch_subdirs "$RELEASE_LINK$target"); do
+            imagebuilder=$(fetch_subdirs "$RELEASE_LINK$PARSER_PROFILE$target$subtarget" | grep imagebuilder)
+            start_build "$RELEASE_LINK$target$subtarget$imagebuilder"
         done
     done
     exit
@@ -506,12 +517,12 @@ else
             for PKG_SET in $PSET_PATHS; do
                 echo "building three packagelists..."
                 read_packageset "../$PKG_SET"
-                start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $CONF_DEVICE
+                start_build "$TARGET_LIST$IMAGEBUILDER $PKG_SET $CONF_DEVICE"
             done
         else
             echo "building one packagelist only..."
             # "targets" is on purpose there. Otherwise that positonal argument would be empty.
-            start_build "$TARGET_LIST$IMAGEBUILDER" targets $CONF_DEVICE
+            start_build "$TARGET_LIST$IMAGEBUILDER targets $CONF_DEVICE"
         fi
         exit
     fi
@@ -522,7 +533,7 @@ else
             for PKG_SET in $PSET_PATHS; do
                 echo "building three packagelists..."
                 read_packageset "../$PKG_SET"
-                start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder" $PKG_SET
+                start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder $PKG_SET"
             done
         else
             echo "building one packagelist only..."
