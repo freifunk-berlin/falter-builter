@@ -72,12 +72,6 @@ olsrd-mod-txtinfo
 olsrd-mod-nameservice
 kmod-ipip
 
-# BATMAN
-batctl-full
--batctl-tiny
-kmod-batman-adv
-alfred
-
 # Statistics
 luci-app-statistics
 collectd
