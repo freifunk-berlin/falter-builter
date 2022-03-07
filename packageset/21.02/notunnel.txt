@@ -71,6 +71,12 @@ luci-i18n-ffwizard-falter-en
 luci-i18n-falter-policyrouting-de
 luci-i18n-falter-policyrouting-en
 
+# autoupdate
+falter-berlin-autoupdate
+falter-berlin-autoupdate-keys
+luci-app-falter-autoupdate
+luci-i18n-falter-autoupdate-de
+
 # OLSR
 olsrd
 olsrd-utils
