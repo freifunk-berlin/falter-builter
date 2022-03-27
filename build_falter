@@ -163,7 +163,7 @@ while :; do
         fi
         ;;
 
-    i*|-image-builder)
+    i* | -image-builder)
         if [ "$2" ]; then
             echo "Use Custom Imagebuilder at: $2"
             IMAGE_BUILDER_PATH="$2"
@@ -213,11 +213,26 @@ while :; do
 done
 
 # check if we got all options we would need.
-if [ -z "$PARSER_FALTER_VERSION" ]; then echo "Please specify a falter-version with '-v'."; OPTION_MISSING=1; fi
-if [ -z "$PARSER_TARGET" ]; then echo "Please give a target with '-t'."; OPTION_MISSING=1; fi
-if [ -z "$PARSER_SUBTARGET" ]; then echo "Please give a subtarget with option '-s'."; OPTION_MISSING=1; fi
-if [ -z "$PARSER_PACKAGESET" ]; then echo "Please specify a packageset with option '-p'."; OPTION_MISSING=1; fi
-if [ "$OPTION_MISSING" == 1 ]; then echo "Exiting..."; exit 1; fi
+if [ -z "$PARSER_FALTER_VERSION" ]; then
+    echo "Please specify a falter-version with '-v'."
+    OPTION_MISSING=1
+fi
+if [ -z "$PARSER_TARGET" ]; then
+    echo "Please give a target with '-t'."
+    OPTION_MISSING=1
+fi
+if [ -z "$PARSER_SUBTARGET" ]; then
+    echo "Please give a subtarget with option '-s'."
+    OPTION_MISSING=1
+fi
+if [ -z "$PARSER_PACKAGESET" ]; then
+    echo "Please specify a packageset with option '-p'."
+    OPTION_MISSING=1
+fi
+if [ "$OPTION_MISSING" == 1 ]; then
+    echo "Exiting..."
+    exit 1
+fi
 
 # check for dependencies.
 SCRIPT_DEPENDS="awk curl gawk grep git gettext python3 rsync sed unzip wget"
@@ -279,8 +294,8 @@ EOF
 function patch_if_needed() {
     # check if a patch has already been applied (i.e. it's been merged upstream (for some versions))
     # and apply it only if it has not
-    patch -f -s -R --dry-run -p${2:-1} -i "$1" >/dev/null || \
-    patch -f -p${2:-1} -i "$1"
+    patch -f -s -R --dry-run -p${2:-1} -i "$1" >/dev/null ||
+        patch -f -p${2:-1} -i "$1"
 }
 
 function patch_buildsystem() {
@@ -292,7 +307,7 @@ function patch_buildsystem() {
     patch_if_needed ../../patches/workaround-kernel2minor-path-length-limitation.patch 2
 }
 
-function derive_packagelist_version {
+function derive_underlying_openwrt_version {
     # OpenWrt-Version from freifunk-release file could be something like
     # '19.07-SNAPSHOT'. But we have only packagelists for 19.07... Solve that.
     regex="^[0-9][0-9].[0-9][0-9]"
@@ -414,9 +429,9 @@ function start_build {
     echo "$1"
 
     if [ -n "$IMAGE_BUILDER_PATH" ]; then
-      IMAGE_BUILDER_URL=$IMAGE_BUILDER_PATH
+        IMAGE_BUILDER_URL=$IMAGE_BUILDER_PATH
     else
-      IMAGE_BUILDER_URL="$1"
+        IMAGE_BUILDER_URL="$1"
     fi
 
     local TMP=$2 # slice packageset-name from path
@@ -433,16 +448,16 @@ function start_build {
     echo "FILENAME $FILENAME FOLDERNAME $FOLDERNAME BRANCH $BRANCH PKG_SET $PKG_SET"
 
     if [ -z $IMAGE_BUILDER_PATH ]; then
-      # store imagebuilders in cache. Reload, if there is a newer version avaiable
-      local CACHE="../imagebuilder_cache"
-      if [ ! -d $CACHE ]; then mkdir -p $CACHE; fi
-      cd $CACHE
-      wget -N --no-if-modified-since $IMAGE_BUILDER_URL
-      cd ../build
-      # pull imagebuilder from cache-dir
-      cp ../imagebuilder_cache/$FILENAME $FILENAME
+        # store imagebuilders in cache. Reload, if there is a newer version avaiable
+        local CACHE="../imagebuilder_cache"
+        if [ ! -d $CACHE ]; then mkdir -p $CACHE; fi
+        cd $CACHE
+        wget -N --no-if-modified-since $IMAGE_BUILDER_URL
+        cd ../build
+        # pull imagebuilder from cache-dir
+        cp ../imagebuilder_cache/$FILENAME $FILENAME
     else
-      cp ../$IMAGE_BUILDER_PATH $FILENAME
+        cp ../$IMAGE_BUILDER_PATH $FILENAME
     fi
 
     echo $PWD
@@ -532,14 +547,27 @@ function start_build {
 #    MAIN    #
 ##############
 
-PARSER_OWT=$(derive_packagelist_version $FREIFUNK_OPENWRT_BASE)
+PARSER_OWT=$(derive_underlying_openwrt_version $FREIFUNK_OPENWRT_BASE)
 
 if [ "$PARSER_PACKAGESET" == "all" ]; then
+    # split off "-snapshot" for stable-release-snapshots, so we can use the designated stable-packagelist
+    if echo "$FREIFUNK_RELEASE" | grep "snapshot\|rc"; then
+        ff_release=$(echo "$FREIFUNK_RELEASE" | cut -d'-' -f1)
+    else
+        ff_release="$FREIFUNK_RELEASE"
+    fi
+
     # build all imageflavours. For this, get paths of packagesets
     # fetch paths of packagelists (depends on openwrt-version). If not unique, chose most recent version of possibilities.
-    PSET_PATHS=$(find packageset | sort | grep -e "/$PARSER_OWT" | grep .txt | tail -n3)
+    PSET_PATHS=$(find packageset | sort | grep -e "/$ff_release" | grep .txt | tail -n3)
+
+    if [ -z "$PSET_PATHS" ]; then
+        echo "There aren't packagesets defined for this version. Please give a packagelist explicitly!"
+        exit 1
+    fi
+
+    echo "Packagelists to be build:"
     echo $PSET_PATHS
-    #exit
 else
     read_packageset "$PARSER_PACKAGESET"
 fi
@@ -588,12 +616,12 @@ else
         IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
         if [ "$PSET_PATHS" ]; then
             for PKG_SET in $PSET_PATHS; do
-                echo "building three packagelists..."
+                echo "-> building three packagelists..."
                 read_packageset "../$PKG_SET"
                 start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $CONF_DEVICE
             done
         else
-            echo "building one packagelist only..."
+            echo "-> building one packagelist only..."
             # "targets" is on purpose there. Otherwise that positonal argument would be empty.
             start_build "$TARGET_LIST$IMAGEBUILDER" targets $CONF_DEVICE
         fi
@@ -604,12 +632,12 @@ else
         imagebuilder=$(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/$subtarget" | grep imagebuilder)
         if [ "$PSET_PATHS" ]; then
             for PKG_SET in $PSET_PATHS; do
-                echo "building three packagelists..."
+                echo "-> building three packagelists..."
                 read_packageset "../$PKG_SET"
                 start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder" $PKG_SET
             done
         else
-            echo "building one packagelist only..."
+            echo "-> building one packagelist only..."
             start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder"
         fi
     done
