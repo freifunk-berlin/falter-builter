@@ -4,7 +4,6 @@
 # memory of a single 4MB-Device exceeds.
 # set -e
 
-
 RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
 RELEASES="
     https://downloads.openwrt.org/releases/19.07.5/targets/
@@ -305,11 +304,13 @@ function derive_branch_from_url {
 
 function generate_embedded_files {
     FALTERBRANCH="$1"
+    local url="$2"
+    local fingerprint="$3"
     # call scripts to generate dynamic data in embedded files
     local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
     local SUBTARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 8)
 
-    local OPENWRT_BASE=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 5) 
+    local OPENWRT_BASE=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 5)
     echo "OPENWRT_BASE $OPENWRT_BASE"
 
     # Get the FREIFUNK_RELEASE variable from the falter feed
@@ -324,7 +325,7 @@ function generate_embedded_files {
     ../../scripts/02-favicon.sh
     ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
     export REPO # export repo line to inject into images. contains whitespace...
-    ../../scripts/04-include-falter-feed.sh
+    ../../scripts/04-include-falter-feed.sh "$url" "$fingerprint"
     ../../scripts/05-olsrd-init-for-21-02-0.sh $OPENWRT_BASE
     ../../scripts/06-luci-base-networkjs.sh $OPENWRT_BASE
 }
@@ -405,14 +406,18 @@ function start_build {
 
     # the hexadecimal number represents the fringerprint of the key. Refer to third section of https://openwrt.org/docs/guide-user/security/keygen#generate_usign_key_pair
     local URL="https://firmware.berlin.freifunk.net/feed/packagefeed_master.pub"
+    local FINGERPRINT="61a078a38408e710"
     echo "loading package-feed key from $URL"
     mkdir -p keys
-    curl "$URL" > keys/61a078a38408e710
+    curl "$URL" >"keys/$FINGERPRINT"
     # check, if we really got a key
-    grep "untrusted comment:" keys/61a078a38408e710 > /dev/null
-    if [ $? != 0 ]; then echo -e "\nThe loaded file apparently doesn't contain a valid key!\n"; exit 2; fi
+    grep "untrusted comment:" "keys/$FINGERPRINT" >/dev/null
+    if [ $? != 0 ]; then
+        echo -e "\nThe loaded file apparently doesn't contain a valid key!\n"
+        exit 2
+    fi
 
-    generate_embedded_files $BRANCH
+    generate_embedded_files "$BRANCH" "$URL" "$FINGERPRINT"
     if [ -z $DEVICE ]; then
         for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
             echo "start building $profile..."
@@ -482,7 +487,6 @@ if [ $FREIFUNK_OPENWRT_BASE == "master" ]; then
     RELEASE_LINK_BASE="https://downloads.openwrt.org/"
     FREIFUNK_OPENWRT_BASE="snapshots"
 fi
-
 
 if [ -z "$CONF_TARGET" ] && [ -z "$IMAGE_BUILDER_PATH" ]; then
     # build one release for all targets
