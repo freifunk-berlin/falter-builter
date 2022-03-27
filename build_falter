@@ -235,7 +235,7 @@ if [ "$OPTION_MISSING" == 1 ]; then
 fi
 
 # check for dependencies.
-SCRIPT_DEPENDS="awk curl gawk grep git gettext python3 rsync sed unzip wget"
+SCRIPT_DEPENDS="awk curl gawk grep git gettext python3 rsync sed unzip wget sqlite3"
 for DEP in $SCRIPT_DEPENDS; do
     type "$DEP" >/dev/null
     if [ $? != 0 ]; then
