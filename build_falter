@@ -3,6 +3,7 @@
 # do not use 'set -e'. It will abort a whole build if, i.e. the
 # memory of a single 4MB-Device exceeds.
 # set -e
+set -o pipefail
 
 REALPATH_SCRIPT=$(realpath "$0")
 BUILTER_DIR=$(dirname "$REALPATH_SCRIPT")
@@ -322,6 +323,10 @@ function read_packageset {
     local PACKAGE_SET_PATH=$1
     # read packageset, while removing comments, empty lines and newlines
     PACKAGE_SET=$(cat "$PACKAGE_SET_PATH" | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
+    if [ $? != 0 ]; then
+        echo "failed to read packageset. Did you give a correct path?"
+        exit 2
+    fi
 }
 
 function fetch_subdirs {
