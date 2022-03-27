@@ -4,16 +4,27 @@
 # memory of a single 4MB-Device exceeds.
 # set -e
 
+REALPATH_SCRIPT=$(realpath "$0")
+BUILTER_DIR=$(dirname "$REALPATH_SCRIPT")
+
 RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
-RELEASES="
-    https://downloads.openwrt.org/releases/19.07.5/targets/
-    https://downloads.openwrt.org/releases/19.07.6/targets/
-    https://downloads.openwrt.org/releases/21.02-SNAPSHOT/targets/
-    https://downloads.openwrt.org/snapshots/targets/"
 
 # General variables
 FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed/"
 FREIFUNK_RELEASE=""
+OPENWRT_TOH="https://openwrt.org/_media/toh_dump_tab_separated.gz"
+
+# list of packages, that get omitted on 8 MiB devices
+OMIT_LIST_8MiB="
+    mtr
+    iperf3
+    tmux
+    vnstat
+    "
+# list of devices, that have technically 16 MiB flash, but have two partitions a 8 MiB
+OVERRIDE_TO_8MiB="
+    ubnt_unifiac-mesh
+"
 
 ##################
 #   CMD-PARSER   #
@@ -220,19 +231,50 @@ done
 
 # repository derives directly from the falter-version. Download freifunk_release
 # file and determine openwrt-version by its variables
-BASE_URL=$(echo $FALTER_REPO_BASE | cut -d' ' -f 3)
+BASE_URL=$(echo "$FALTER_REPO_BASE" | cut -d' ' -f 3)
 FEEDURL="$BASE_URL$PARSER_FALTER_VERSION/packages/mips_24kc/falter/"
 if ! curl --silent --fail "$FEEDURL" >/dev/null; then
     echo "Error: failed retrieving feed URL. Wrong version '$PARSER_FALTER_VERSION'?"
     exit 2
 fi
-COMMONFILEURL=$FEEDURL$(curl -s ${FEEDURL}/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
-TMP=$(curl -s $COMMONFILEURL | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
-eval $TMP
+
+COMMONFILEURL=$FEEDURL$(curl -s "${FEEDURL}"/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
+TMP=$(curl -s "$COMMONFILEURL" | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
+eval "$TMP"
 
 #################
 #   FUNCTIONS   #
 #################
+
+function build_router_db {
+    # load the table-of-hardware from openwrt project, to get further information on router,
+    # like i.e. flash-size
+    wget "$OPENWRT_TOH" -O "$BUILTER_DIR/build/toh.gz"
+    gunzip "$BUILTER_DIR/build/toh.gz"
+    echo -e '.separator "\t"\n.import '"$BUILTER_DIR/build/toh"' toh' | sqlite3 "$BUILTER_DIR/build/toh.db"
+}
+
+function request_router_from_db {
+    local board="$1"
+    local response
+
+    response=$(sqlite3 -batch "$BUILTER_DIR/build/toh.db" <<EOF
+SELECT
+    brand, model, version, flashmb, rammb
+FROM
+    toh
+WHERE
+    firmwareopenwrtinstallurl LIKE '%$board%' OR
+    firmwareopenwrtupgradeurl LIKE '%$board%' OR
+    firmwareopenwrtsnapshotinstallurl LIKE '%$board%' OR
+    firmwareopenwrtsnapshotupgradeurl LIKE '%$board%';
+EOF
+)
+    # sometimes different routers share the same image
+    # like UniFi AC Mesh and UniFi AC Mesh Pro. Ensure to only
+    # return one dataset and take the first one then.
+    echo "$response" | head -n1
+}
 
 function patch_if_needed() {
     # check if a patch has already been applied (i.e. it's been merged upstream (for some versions))
@@ -264,12 +306,12 @@ function derive_packagelist_version {
 function read_packageset {
     local PACKAGE_SET_PATH=$1
     # read packageset, while removing comments, empty lines and newlines
-    PACKAGE_SET=$(cat $PACKAGE_SET_PATH | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
+    PACKAGE_SET=$(cat "$PACKAGE_SET_PATH" | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
 }
 
 function fetch_subdirs {
     URL=$1
-    curl -s $URL | grep href | grep -v 'snapshots\|releases' | awk -F'"' '{print $4}'
+    curl -s "$URL" | grep href | grep -v 'snapshots\|releases' | awk -F'"' '{print $4}'
 }
 
 function is_wave1_device {
@@ -278,6 +320,8 @@ function is_wave1_device {
     DEVICE_PACKAGES=$(make info | grep "$profile:" -A 2 | tail -n1 | cut -d':' -f2)
     if [[ "$DEVICE_PACKAGES" =~ ath10k-firmware-qca988x || "$DEVICE_PACKAGES" =~ ath10k-firmware-qca9887 ]]; then
         subsitute_ct_driver "$DEVICE_PACKAGES"
+    else
+        PACKAGE_SET_DEVICE="$PACKAGE_SET"
     fi
 }
 
@@ -289,12 +333,46 @@ function subsitute_ct_driver {
     PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET"" $DEVICE_PACKAGES" | sed -e 's/ath10k-firmware-qca988x-ct/ath10k-firmware-qca988x -ath10k-firmware-qca988x-ct/g; s/ath10k-firmware-qca9887-ct/ath10k-firmware-qca9887 -ath10k-firmware-qca9887-ct/g; s/kmod-ath10k-ct/kmod-ath10k -kmod-ath10k-ct/g')
 }
 
+function is_8MiB_flash_device {
+    # remove some packages to keep the image-size quite below 8MiB
+    local profile="$1"
+    local DEVICE_PACKAGES=$(echo "$@" | cut -d' ' -f 2-)
+    local flash
+
+    flash=$(request_router_from_db "$profile" | cut -d'|' -f 4)
+
+    # fail on purpose, if field didn't contain integer only
+    # enforce 8MiB-List, if Router was specified in override-list
+    if [ "$flash" -le 8 ] || [[ $OVERRIDE_TO_8MiB == *$profile* ]]; then
+        echo "Board has 8MiB flash only. Removing some packages..."
+
+        for P in $OMIT_LIST_8MiB; do
+            PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET_DEVICE" | sed -e "s|$P||g")
+        done
+    fi
+}
+
+function is_32MiB_RAM_device {
+    echo "is_32MiB_RAM_device: Not implemented now"
+    exit 42
+}
+
+function modify_packagelist {
+    local profile="$1"
+
+    # $PACKAGE_SET and $PACKAGE_SET_DEVICE are global variables holding the
+    # original and the per device modified packagelist. They get modified by the
+    # functions directly
+    is_wave1_device "$profile"
+    is_8MiB_flash_device "$profile" "$PACKAGE_SET_DEVICE"
+}
+
 function derive_branch_from_url {
     URL=$1
-    RELEASE_TYPE=$(echo $URL | awk -F'/' '{print $4}')
+    RELEASE_TYPE=$(echo "$URL" | awk -F'/' '{print $4}')
     case $RELEASE_TYPE in
     releases)
-        echo $URL | awk -F'/' '{print $5}' | cut -d. -f1-2
+        echo "$URL" | awk -F'/' '{print $5}' | cut -d. -f1-2
         ;;
     snapshots)
         echo snapshot
@@ -334,18 +412,22 @@ function start_build {
     # use local imagebuilder if it was given
     echo "$IMAGE_BUILDER_PATH"
     echo "$1"
+
     if [ -n "$IMAGE_BUILDER_PATH" ]; then
       IMAGE_BUILDER_URL=$IMAGE_BUILDER_PATH
     else
       IMAGE_BUILDER_URL="$1"
     fi
+
     local TMP=$2 # slice packageset-name from path
     local PKG_SET=$(echo $TMP | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
     local DEVICE=$3
+
     FILENAME=$(basename $IMAGE_BUILDER_URL)
     FOLDERNAME=$(basename $FILENAME .tar.xz)
     BRANCH=$(derive_branch_from_url $IMAGE_BUILDER_URL)
     [ -z $BRANCH ] && BRANCH="snapshot"
+
     echo "building using: $IMAGE_BUILDER_URL"
     echo "selected branch: $BRANCH"
     echo "FILENAME $FILENAME FOLDERNAME $FOLDERNAME BRANCH $BRANCH PKG_SET $PKG_SET"
@@ -383,7 +465,7 @@ function start_build {
         exit 0
     fi
 
-    # Target is in defferent position in the URL, depending on the OpenWrt version.
+    # Target is in different position in the URL, depending on the OpenWrt version.
     case $BRANCH in
     snapshot)
         ispos=7
@@ -418,14 +500,11 @@ function start_build {
     fi
 
     generate_embedded_files "$BRANCH" "$URL" "$FINGERPRINT"
-    if [ -z $DEVICE ]; then
+    if [ -z "$DEVICE" ]; then
         for profile in $(make info | grep ":$" | cut -d: -f1 | grep -v "Available Profiles" | grep -v "Default"); do
             echo "start building $profile..."
 
-            is_wave1_device $profile
-            if [ -z $PACKAGE_SET_DEVICE ]; then
-                PACKAGE_SET_DEVICE="$PACKAGE_SET"
-            fi
+            modify_packagelist "$profile"
 
             make image PROFILE="$profile" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
             PACKAGE_SET_DEVICE="" # empty packageset for use with next wave1-device
@@ -434,16 +513,13 @@ function start_build {
     else
         echo "start building $DEVICE..."
 
-        is_wave1_device $DEVICE
-        if [ -z $PACKAGE_SET_DEVICE ]; then
-            PACKAGE_SET_DEVICE="$PACKAGE_SET"
-        fi
+        modify_packagelist "$DEVICE"
 
         make image PROFILE="$DEVICE" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
         PACKAGE_SET_DEVICE=""
     fi
     # move binaries into central firmware-dir, sort them for packagesets, there was given one.
-    if [ $PKG_SET ]; then
+    if [ "$PKG_SET" ]; then
         rsync -a --remove-source-files bin/targets/* ../../firmwares/$PKG_SET/
     else
         rsync -a --remove-source-files bin/targets/* ../../firmwares/
@@ -473,6 +549,7 @@ mkdir -p firmwares
 rm -rf firmwares/*
 mkdir -p build
 rm -rf build/*
+sleep 3 # avoid strange issues with database...
 cd build
 
 # read command-line parameters
@@ -480,6 +557,9 @@ CONF_RELEASE="$PARSER_OWT"
 CONF_TARGET="$PARSER_TARGET"
 CONF_SUBTARGET="$PARSER_SUBTARGET"
 CONF_DEVICE="$PARSER_PROFILE"
+
+# get OpenWrt ToH
+build_router_db
 
 # if openwrt_base is "master": change to "snapshots". That is the correct
 # directory for downloading openwrt-master
