@@ -1,0 +1,17 @@
+{
+    "passwd": "passw0rd",
+    "hostname": "fancy-freifunk-node",
+    "realname": "Franzi Freifunker",
+    "nickname": "fff",
+    "contact": "https://config.berlin.freifunk.net/contact/6474",
+    "location": "example-stree, Mitte, Berlin",
+    "lat": "52.52376514246861",
+    "lon": "13.4199891591954",
+    "download": 25,
+    "upload": 12,
+    "sharenet_off": false,
+    "monitoring_off": false,
+    "radio0": "10.0.0.x",
+    "radio1": "10.0.0.y",
+    "dhcp": "10.31.0.z/27"
+}
