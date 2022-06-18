@@ -120,8 +120,22 @@ function is_8MiB_flash_device {
 }
 
 function is_32MiB_RAM_device {
-    echo "is_32MiB_RAM_device: Not implemented now"
-    exit 42
+    # remove/add some packages to improve performance on 32MiB RAM
+    local profile="$1"
+    local DEVICE_PACKAGES=$(echo "$@" | cut -d' ' -f 2-)
+    local ram
+
+    #echo "$(request_router_from_db "$profile")"
+
+    ram=$(request_router_from_db "$profile" | cut -d'|' -f 5)
+    if [ "$ram" -le 32 ]; then
+        echo "Board has ${ram}MiB RAM only. Modifying packagelist accordingly..."
+
+        # add zram-swap-package
+        PACKAGE_SET_DEVICE="$PACKAGE_SET_DEVICE zram-swap"
+
+        printf "\tdone.\n"
+    fi
 }
 
 function modify_packagelist {
@@ -132,6 +146,7 @@ function modify_packagelist {
     # functions directly
     is_wave1_device "$profile"
     is_8MiB_flash_device "$profile" "$PACKAGE_SET_DEVICE"
+    is_32MiB_RAM_device "$profile" "$PACKAGE_SET_DEVICE"
 }
 
 function derive_branch_from_url {
