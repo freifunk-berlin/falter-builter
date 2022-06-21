@@ -27,12 +27,12 @@ OVERRIDE_TO_8MiB="
     ubnt_unifiac-mesh
 "
 
+source ./lib.bash
+
 ##################
 #   CMD-PARSER   #
 ##################
 
-# POSIX-compliant getopt(s)-free old-style-supporting option parser from phk@[se.unix]
-# https://stackoverflow.com/a/33191693
 print_usage() {
     echo "Usage:
 
@@ -40,203 +40,126 @@ print_usage() {
 
 Options:
 
-  -p|--packageset [PATH]
+  -p [PATH]
     give a path to the packageset
 
-  -v|--version [VERSION]
-    Falter-release to be used. i.e. '1.1.0' or '1.1.1-snapshot', etc.
+  -v [VERSION]
+    Falter-release to be used. i.e. '1.2.2' or '1.2.3-snapshot', etc.
     Maps directly to the directories at https://firmware.berlin.freifunk.net/feed/
 
-  -t|--target [TARGET]
+  -t [TARGET]
     target like 'ath79'
 
-  -s|--sub-target [SUBTARGET]
+  -s [SUBTARGET]
     something like 'generic'. This is optional.
 
-  -r|--router [ROUTER-PROFILE]
+  -r [ROUTER-PROFILE]
     give a router-profile like 'glinet_gl-ar150'. This is optional.
 
-  -l|--list-routers
+  -l
     shows a list of the routers avaiable in that target and
     their profile name. This name is the input for '-r'.
 
-  -d|--development
+  -d
     use development-feeds instead of release-feeds
 
-  -i|--image-builder
+  -i
     use custom image-builder instead of standart-openwrt ones.
 
 " >&2
 }
+
+# check for getopt
+type getopts >/dev/null || echo "falter-builter needs \"getopts\" for running. Please install it on your system."
 
 if [ $# -le 0 ]; then
     print_usage
     exit 1
 fi
 
-opt=
-while :; do
-
-    if [ $# -le 0 ]; then
-        # no parameters remaining -> end option parsing
-        break
-    elif [ ! "$opt" ]; then
-        # we are at the beginning of a fresh block
-        # remove optional leading hyphen and strip trailing whitespaces
-        opt=$(echo "$1" | sed 's/^-\?\([a-zA-Z0-9\?-]*\)/\1/')
-    fi
-
-    # get the first character -> check whether long option
-    first_chr=$(echo "$opt" | awk '{print substr($1, 1, 1)}')
-    [ "$first_chr" = - ] && long_option=T || long_option=F
-
-    # note to write the options here with a leading hyphen less
-    # also do not forget to end short options with a star
-    case $opt in
-    -)
-        # end of options
-        shift
-        break
-        ;;
-
-    d* | -development)
+while getopts dp:v:t:s:r:i:lh option; do
+    case $option in
+    d)
         echo "using dev-feeds."
         FALTER_REPO_BASE="$FALTER_REPO_BASE""new/"
         ;;
-
-    p* | -packageset)
-        if [ "$2" ]; then
-            echo "Packagset is: $2"
-            PARSER_PACKAGESET="$2"
-            shift
+    p)
+        if [[ "$OPTARG" != -* ]]; then
+            echo "Packagset is: $OPTARG"
+            PARSER_PACKAGESET="$OPTARG"
         else
-            echo "Packageset parameters incomplete!" >&2
-            print_usage
+            echo "Please specify a packageset with option '-p'."
             exit 1
         fi
         ;;
-
-    v* | -version)
-        if [ "$2" ]; then
-            echo "Falter-version is: $2"
-            PARSER_FALTER_VERSION="$2"
-            shift
+    v)
+        if [[ "$OPTARG" != -* ]]; then
+            echo "Falter-version is: $OPTARG"
+            PARSER_FALTER_VERSION="$OPTARG"
         else
-            echo "Version parameters incomplete!" >&2
-            print_usage
+            echo "Please specify a falter-version with '-v'."
             exit 1
         fi
         ;;
-
-    t* | -target)
-        if [ "$2" ]; then
-            echo "Target is: $2"
-            PARSER_TARGET="$2"
-            shift
+    t)
+        if [[ "$OPTARG" != -* ]]; then
+            echo "Target is: $OPTARG"
+            PARSER_TARGET="$OPTARG"
         else
-            echo "Target parameters incomplete!" >&2
-            print_usage
+            echo "Please give a target with '-t'."
             exit 1
         fi
         ;;
-
-    s* | -sub-target)
-        if [ "$2" ]; then
-            echo "Sub-Target is: $2"
-            PARSER_SUBTARGET="$2"
-            shift
+    s)
+        if [[ "$OPTARG" != -* ]]; then
+            echo "Sub-Target is: $OPTARG"
+            PARSER_SUBTARGET="$OPTARG"
         else
-            echo "Sub-Target parameters incomplete!" >&2
-            print_usage
+            echo "Please give a subtarget with option '-s'."
             exit 1
         fi
         ;;
-
-    r* | -router)
-        if [ "$2" ]; then
-            echo "Router is: $2"
-            PARSER_PROFILE="$2"
-            shift
-        else
-            echo "router-profile parameters incomplete!" >&2
-            print_usage
-            exit 1
+    r)
+        if [[ "$OPTARG" != -* ]]; then
+            echo "Router is: $OPTARG"
+            PARSER_PROFILE="$OPTARG"
         fi
         ;;
-
-    i* | -image-builder)
-        if [ "$2" ]; then
-            echo "Use Custom Imagebuilder at: $2"
-            IMAGE_BUILDER_PATH="$2"
-            shift
-        else
-            echo "Custom Imagebuilder parameters incomplete!" >&2
-            print_usage
-            exit 1
+    i)
+        if [[ "$OPTARG" != -* ]]; then
+            echo "Use Custom Imagebuilder at: $OPTARG"
+            IMAGE_BUILDER_PATH="$OPTARG"
         fi
         ;;
-
-    l* | -list-routers)
+    l)
         PARSER_LIST_ROUTERS="y"
         ;;
-
-    h* | \?* | -help)
+    h)
         print_usage
         exit 0
         ;;
-
     *)
-
-        if [ "$long_option" = T ]; then
-            opt=$(echo "$opt" | awk '{print substr($1, 2)}')
-        else
-            opt=$first_chr
-        fi
-        printf 'Error: Unknown option: "%s"\n' "$opt" >&2
         print_usage
-        exit 1
+        exit 2
         ;;
-
     esac
-
-    if [ "$long_option" = T ]; then
-        # if we had a long option then we are going to get a new block next
-        shift
-        opt=
-
-    else
-        # if we had a short option then just move to the next character
-        opt=$(echo "$opt" | awk '{print substr($1, 2)}')
-
-        # if block is now empty then shift to the next one
-        [ "$opt" ] || shift
-    fi
 done
 
+# for nice looking output...
+printf "\n"
+
 # check if we got all options we would need.
-if [ -z "$PARSER_FALTER_VERSION" ]; then
-    echo "Please specify a falter-version with '-v'."
-    OPTION_MISSING=1
-fi
-if [ -z "$PARSER_TARGET" ]; then
-    echo "Please give a target with '-t'."
-    OPTION_MISSING=1
-fi
-if [ -z "$PARSER_SUBTARGET" ]; then
-    echo "Please give a subtarget with option '-s'."
-    OPTION_MISSING=1
-fi
-if [ -z "$PARSER_PACKAGESET" ]; then
-    echo "Please specify a packageset with option '-p'."
-    OPTION_MISSING=1
-fi
-if [ "$OPTION_MISSING" == 1 ]; then
-    echo "Exiting..."
+if [ -z "$PARSER_FALTER_VERSION" ] || [ -z "$PARSER_TARGET" ] || [ -z "$PARSER_SUBTARGET" ] || [ -z "$PARSER_PACKAGESET" ]; then
+    printf "Please specify at least theses options:\n\
+    -v\t[falter-version],\n\
+    -p\t[packagelist],\n\
+    -t\t[target],\n\
+    -s\t[subtarget]\n\n"
     exit 1
 fi
 
 # check for dependencies.
-SCRIPT_DEPENDS="awk curl gawk grep git gettext python3 rsync sed unzip wget sqlite3"
+SCRIPT_DEPENDS="awk curl gawk grep git gettext printf python3 rsync sed unzip wget sqlite3"
 for DEP in $SCRIPT_DEPENDS; do
     type "$DEP" >/dev/null
     if [ $? != 0 ]; then
@@ -258,181 +181,8 @@ COMMONFILEURL=$FEEDURL$(curl -s "${FEEDURL}"/Packages | sed -n '/falter-common$/
 TMP=$(curl -s "$COMMONFILEURL" | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
 eval "$TMP"
 
-#################
-#   FUNCTIONS   #
-#################
-
-function build_router_db {
-    # load the table-of-hardware from openwrt project, to get further information on router,
-    # like i.e. flash-size
-    wget "$OPENWRT_TOH" -O "$BUILTER_DIR/build/toh.gz"
-    gunzip "$BUILTER_DIR/build/toh.gz"
-    echo -e '.separator "\t"\n.import '"$BUILTER_DIR/build/toh"' toh' | sqlite3 "$BUILTER_DIR/build/toh.db"
-}
-
-function request_router_from_db {
-    local board="$1"
-    local response
-
-    response=$(sqlite3 -batch "$BUILTER_DIR/build/toh.db" <<EOF
-SELECT
-    brand, model, version, flashmb, rammb
-FROM
-    toh
-WHERE
-    firmwareopenwrtinstallurl LIKE '%$board%' OR
-    firmwareopenwrtupgradeurl LIKE '%$board%' OR
-    firmwareopenwrtsnapshotinstallurl LIKE '%$board%' OR
-    firmwareopenwrtsnapshotupgradeurl LIKE '%$board%';
-EOF
-)
-    # sometimes different routers share the same image
-    # like UniFi AC Mesh and UniFi AC Mesh Pro. Ensure to only
-    # return one dataset and take the first one then.
-    echo "$response" | head -n1
-}
-
-function patch_if_needed() {
-    # check if a patch has already been applied (i.e. it's been merged upstream (for some versions))
-    # and apply it only if it has not
-    patch -f -s -R --dry-run -p${2:-1} -i "$1" >/dev/null ||
-        patch -f -p${2:-1} -i "$1"
-}
-
-function patch_buildsystem() {
-    # applies some patches to the buildsystem to allow us building falter in our way.
-
-    # patch json-info, so that it will contain every image, not just the last one
-    patch_if_needed ../../patches/append_new_images_overview_json.patch
-    # fix patch at building mikrotik devices. prepones https://github.com/openwrt/openwrt/pull/3262
-    patch_if_needed ../../patches/workaround-kernel2minor-path-length-limitation.patch 2
-}
-
-function derive_underlying_openwrt_version {
-    # OpenWrt-Version from freifunk-release file could be something like
-    # '19.07-SNAPSHOT'. But we have only packagelists for 19.07... Solve that.
-    regex="^[0-9][0-9].[0-9][0-9]"
-    if [[ $1 =~ $regex ]]; then
-        echo $(echo $1 | cut -c 1-5)
-    else
-        echo "snapshot"
-    fi
-}
-
-function read_packageset {
-    local PACKAGE_SET_PATH=$1
-    # read packageset, while removing comments, empty lines and newlines
-    PACKAGE_SET=$(cat "$PACKAGE_SET_PATH" | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
-    if [ $? != 0 ]; then
-        echo "failed to read packageset. Did you give a correct path?"
-        exit 2
-    fi
-}
-
-function fetch_subdirs {
-    URL=$1
-    curl -s "$URL" | grep href | grep -v 'snapshots\|releases' | awk -F'"' '{print $4}'
-}
-
-function is_wave1_device {
-    # detect, if a device has wave1-chipset by its firmware
-    local profile=$1
-    DEVICE_PACKAGES=$(make info | grep "$profile:" -A 2 | tail -n1 | cut -d':' -f2)
-    if [[ "$DEVICE_PACKAGES" =~ ath10k-firmware-qca988x || "$DEVICE_PACKAGES" =~ ath10k-firmware-qca9887 ]]; then
-        subsitute_ct_driver "$DEVICE_PACKAGES"
-    else
-        PACKAGE_SET_DEVICE="$PACKAGE_SET"
-    fi
-}
-
-function subsitute_ct_driver {
-    # generate a packagelist with ct-drivers/firmware substituted by normal one
-    local DEVICE_PACKAGES="$@"
-    echo "wave1 chipset detected..."
-    echo "change firmware and drivers in packagelist to non-ct counterparts..."
-    PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET"" $DEVICE_PACKAGES" | sed -e 's/ath10k-firmware-qca988x-ct/ath10k-firmware-qca988x -ath10k-firmware-qca988x-ct/g; s/ath10k-firmware-qca9887-ct/ath10k-firmware-qca9887 -ath10k-firmware-qca9887-ct/g; s/kmod-ath10k-ct/kmod-ath10k -kmod-ath10k-ct/g')
-}
-
-function is_8MiB_flash_device {
-    # remove some packages to keep the image-size quite below 8MiB
-    local profile="$1"
-    local DEVICE_PACKAGES=$(echo "$@" | cut -d' ' -f 2-)
-    local flash
-
-    flash=$(request_router_from_db "$profile" | cut -d'|' -f 4)
-
-    # fail on purpose, if field didn't contain integer only
-    # enforce 8MiB-List, if Router was specified in override-list
-    if [ "$flash" -le 8 ] || [[ $OVERRIDE_TO_8MiB == *$profile* ]]; then
-        echo "Board has 8MiB flash only. Removing some packages..."
-
-        for P in $OMIT_LIST_8MiB; do
-            PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET_DEVICE" | sed -e "s|$P||g")
-        done
-    fi
-}
-
-function is_32MiB_RAM_device {
-    echo "is_32MiB_RAM_device: Not implemented now"
-    exit 42
-}
-
-function modify_packagelist {
-    local profile="$1"
-
-    # $PACKAGE_SET and $PACKAGE_SET_DEVICE are global variables holding the
-    # original and the per device modified packagelist. They get modified by the
-    # functions directly
-    is_wave1_device "$profile"
-    is_8MiB_flash_device "$profile" "$PACKAGE_SET_DEVICE"
-}
-
-function derive_branch_from_url {
-    URL=$1
-    RELEASE_TYPE=$(echo "$URL" | awk -F'/' '{print $4}')
-    case $RELEASE_TYPE in
-    releases)
-        echo "$URL" | awk -F'/' '{print $5}' | cut -d. -f1-2
-        ;;
-    snapshots)
-        echo snapshot
-        ;;
-    esac
-}
-
-function generate_embedded_files {
-    FALTERBRANCH="$1"
-    local url="$2"
-    local fingerprint="$3"
-    # call scripts to generate dynamic data in embedded files
-    local TARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 7)
-    local SUBTARGET=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 8)
-
-    local OPENWRT_BASE=$(echo $IMAGE_BUILDER_URL | cut -d'/' -f 5)
-    echo "OPENWRT_BASE $OPENWRT_BASE"
-
-    # Get the FREIFUNK_RELEASE variable from the falter feed
-    # located in the falter-common package.
-    [ "snapshot" == $FALTERBRANCH ] && FALTERBRANCH="master"
-    [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
-
-    # clear out any old embedded_files
-    rm -rf ../../embedded-files/*
-
-    ../../scripts/01-generate_banner.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FREIFUNK_REVISION
-    ../../scripts/02-favicon.sh
-    ../../scripts/03-luci-footer.sh $FREIFUNK_RELEASE $TARGET $SUBTARGET $FALTERBRANCH $FREIFUNK_REVISION
-    export REPO # export repo line to inject into images. contains whitespace...
-    ../../scripts/04-include-falter-feed.sh "$url" "$fingerprint"
-    ../../scripts/05-olsrd-init-for-21-02-0.sh $OPENWRT_BASE
-    ../../scripts/06-luci-base-networkjs.sh $OPENWRT_BASE
-}
-
 function start_build {
     # use local imagebuilder if it was given
-    echo "$IMAGE_BUILDER_PATH"
-    echo "$1"
-
     if [ -n "$IMAGE_BUILDER_PATH" ]; then
         IMAGE_BUILDER_URL=$IMAGE_BUILDER_PATH
     else
@@ -450,37 +200,43 @@ function start_build {
 
     echo "building using: $IMAGE_BUILDER_URL"
     echo "selected branch: $BRANCH"
-    echo "FILENAME $FILENAME FOLDERNAME $FOLDERNAME BRANCH $BRANCH PKG_SET $PKG_SET"
 
     if [ -z $IMAGE_BUILDER_PATH ]; then
         # store imagebuilders in cache. Reload, if there is a newer version avaiable
         local CACHE="../imagebuilder_cache"
         if [ ! -d $CACHE ]; then mkdir -p $CACHE; fi
         cd $CACHE
-        wget -N --no-if-modified-since $IMAGE_BUILDER_URL
+
+        printf "loading imagebuilder from the internet, if newer...\n"
+        wget -q -N --no-if-modified-since $IMAGE_BUILDER_URL
         cd ../build
-        # pull imagebuilder from cache-dir
+        printf "\tdone.\n"
+
+        printf "pull imagebuilder from cache-dir\n"
         cp ../imagebuilder_cache/$FILENAME $FILENAME
+        printf "\tdone.\n"
     else
+        printf "copy local imagebuilder to build-directory..."
         cp ../$IMAGE_BUILDER_PATH $FILENAME
+        printf "\tdone.\n"
     fi
 
-    echo $PWD
-    echo "Extracting imagebuilder..."
+    printf "Extracting imagebuilder...\n"
 
     rm -rf $FOLDERNAME ib
     tar -xJf $FILENAME
     mv $FOLDERNAME ib
     FOLDERNAME="ib"
-    echo "done."
+    printf "\tdone.\n"
 
     cd $FOLDERNAME
-    echo "start patching imagebuilder..."
+    printf "start patching imagebuilder...\n"
     patch_buildsystem
-    echo "done."
+    printf "\tdone.\n"
 
     if [ "$PARSER_LIST_ROUTERS" == "y" ]; then
         # if ask for, show avaiable router-profiles and quit
+        printf "\n\n\n"
         make info | sed -e '/Packages:/d;/hasImageMetadata:/d'
         exit 0
     fi
@@ -509,15 +265,17 @@ function start_build {
     # the hexadecimal number represents the fringerprint of the key. Refer to third section of https://openwrt.org/docs/guide-user/security/keygen#generate_usign_key_pair
     local URL="https://firmware.berlin.freifunk.net/feed/packagefeed_master.pub"
     local FINGERPRINT="61a078a38408e710"
-    echo "loading package-feed key from $URL"
+    echo "loading package-feed key from $URL..."
     mkdir -p keys
-    curl "$URL" >"keys/$FINGERPRINT"
+    curl -s "$URL" >"keys/$FINGERPRINT"
+
     # check, if we really got a key
     grep "untrusted comment:" "keys/$FINGERPRINT" >/dev/null
     if [ $? != 0 ]; then
         echo -e "\nThe loaded file apparently doesn't contain a valid key!\n"
         exit 2
     fi
+    printf "\tdone.\n"
 
     generate_embedded_files "$BRANCH" "$URL" "$FINGERPRINT"
     if [ -z "$DEVICE" ]; then
@@ -578,12 +336,14 @@ else
 fi
 
 # remove artifacts of last build
+printf "cleaning build-directory...\n"
 mkdir -p firmwares
 rm -rf firmwares/*
 mkdir -p build
 rm -rf build/*
 sleep 3 # avoid strange issues with database...
 cd build
+printf "\tdone.\n"
 
 # read command-line parameters
 CONF_RELEASE="$PARSER_OWT"

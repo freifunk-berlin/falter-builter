@@ -6,10 +6,10 @@ SCRIPTPATH=$(dirname $(readlink -f "$0"))
 URL="$1"
 FINGERPRINT="$2"
 
-mkdir -p "$SCRIPTPATH/../embedded-files/etc/opkg/keys"
+mkdir -p "$SCRIPTPATH/../embedded-files/etc/opkg/keys" || exit 42
 
 # load package-key and post it to dir. keyname is keys fingerprint.
-curl "$URL" >"$SCRIPTPATH/../embedded-files/etc/opkg/keys/$FINGERPRINT"
+curl -s "$URL" >"$SCRIPTPATH/../embedded-files/etc/opkg/keys/$FINGERPRINT" || exit 42
 
 REPO_HTTP=$(echo $REPO | sed -e 's/https/http/g')
 
@@ -20,4 +20,4 @@ printf \
 #
 # src/gz example_feed_name http://www.example.com/path/to/files
 $REPO_HTTP
-" > "$SCRIPTPATH/../embedded-files/etc/opkg/customfeeds.conf"
+" > "$SCRIPTPATH/../embedded-files/etc/opkg/customfeeds.conf" || exit 42
