@@ -21,7 +21,7 @@ The parameters for packageset, version and target are mandatory. The other ones 
 
 If you give packageset, release and no subtarget, it will generate all subtargets of that certain target and so on.
 
-If you like to build only one specific router-profile, you *must* give all the arguments before. 
+If you like to build only one specific router-profile, you *must* give all the arguments before.
 
 `version` takes the falter-version you would like to build. This maps to the feed-directories avaiable at [buildbot](https://firmware.berlin.freifunk.net/feed/).
 
@@ -32,13 +32,7 @@ After the buildprocess finished, you will find the images in `firmwares/`.
 Lets assume you'd like to build a stable-release-tunneldigger-image for your GL-AR150 router. To achieve that, you should invoke the buildscript in that way:
 
 ```sh
-./build_falter -p packageset/19.07/tunneldigger.txt -v 1.1.1 -t ath79 -s generic -r glinet_gl-ar150
-```
-
-If you are more comfortable in memorizing it that way, you can use long arguments:
-
-```sh
-./build_falter --packageset packageset/19.07/tunneldigger.txt --version 1.1.1 --target ath79 --sub-target generic --router glinet_gl-ar150
+./build_falter -p packageset/1.2.2/tunneldigger.txt -v 1.2.2 -t ath79 -s generic -r glinet_gl-ar150
 ```
 
 ### Find your routers profile
@@ -46,7 +40,7 @@ If you are more comfortable in memorizing it that way, you can use long argument
 If you don't know the profile name for your router, you should use `-l` to find it. That option will show you a list of all routers with there profiles. Pick the profile-name there and give it to the script with the `-r` parameter.
 
 ```sh
-./build_falter -p packageset/19.07/tunneldigger.txt -v 1.1.1-snapshot -t ath79 -s generic -l
+./build_falter -p packageset/1.2.2/tunneldigger.txt -v 1.2.2 -t ath79 -s generic -l
 ```
 
 In the router list you will find something similar like that:
@@ -60,7 +54,7 @@ glinet_gl-ar150:
 The profile name is at the first line. Omit the colon:
 
 ```sh
-./build_falter -p packageset/19.07/tunneldigger.txt -v 1.1.1-snapshot -t ath79 -s generic -r glinet_gl-ar150
+./build_falter -p packageset/1.2.2/tunneldigger.txt -v 1.2.2 -t ath79 -s generic -r glinet_gl-ar150
 ```
 
 ### Use custom imagebuilder
@@ -68,7 +62,7 @@ The profile name is at the first line. Omit the colon:
 You can use your custom imagebuilder with falter too. This comes in handy for development and for using features, that are not in regular OpenWrt yet. To get that you should call builter like that:
 
 ```sh
-./build_falter -v 1.2.0-snapshot -p packageset/21.02/tunneldigger.txt -i openwrt-imagebuilder-21.02.0-rc3-octeon.Linux-x86_64.tar.xz -r ubnt_edgerouter
+./build_falter -v snapshot -p packageset/snapshot/tunneldigger.txt -i openwrt-imagebuilder-21.02.0-rc3-octeon.Linux-x86_64.tar.xz -r ubnt_edgerouter
 ```
 
 NOTE: The imagebuilder must be in the root of builter-directory. It ist not supported to have it anywhere else.
