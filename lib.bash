@@ -2,6 +2,17 @@
 #   FUNCTIONS   #
 #################
 
+function print_banner {
+    printf '___.         .__.__   __
+\_ |_Freifunk|__|  |_/  |_  Berlin_____
+ | __ \|  |  \  |  |\   __\/ __ \_  __ \
+ | \_\ \  |  /  |  |_|  | \  ___/|  | \/
+ |___  /____/|__|____/__|  \___  >__|
+     \/ build your own Falter! \/
+
+'
+}
+
 function build_router_db {
     # load the table-of-hardware from openwrt project, to get further information on router,
     # like i.e. flash-size

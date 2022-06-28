@@ -168,6 +168,8 @@ for DEP in $SCRIPT_DEPENDS; do
     fi
 done
 
+print_banner
+
 # repository derives directly from the falter-version. Download freifunk_release
 # file and determine openwrt-version by its variables
 BASE_URL=$(echo "$FALTER_REPO_BASE" | cut -d' ' -f 3)
