@@ -23,7 +23,8 @@ ethtool
 #dnsmasq is already provided via dnsmasq-full
 -dnsmasq
 qos-scripts
-firewall
+firewall4
+iptables-nft
 iwinfo
 libiwinfo-lua
 tcpdump-mini
@@ -79,12 +80,6 @@ olsrd-mod-txtinfo
 olsrd-mod-nameservice
 olsrd-mod-watchdog
 kmod-ipip
-
-# BATMAN
-batctl-full
--batctl-tiny
-kmod-batman-adv
-alfred
 
 # Uplink
 falter-berlin-uplink-tunnelberlin
