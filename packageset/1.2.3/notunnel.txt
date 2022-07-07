@@ -22,8 +22,7 @@ ethtool
 #dnsmasq is already provided via dnsmasq-full
 -dnsmasq
 qos-scripts
-firewall4
-iptables-nft
+firewall
 iwinfo
 libiwinfo-lua
 tcpdump-mini
