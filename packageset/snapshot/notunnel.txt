@@ -33,6 +33,7 @@ falter-common
 falter-common-olsr
 falter-policyrouting
 falter-profiles
+falter-berlin-ssid-changer
 # allow upgrade from one type to another
 falter-berlin-tunneldigger
 
@@ -74,12 +75,12 @@ luci-i18n-falter-policyrouting-en
 
 # OLSR
 olsrd
+olsrd-utils
 olsrd-mod-arprefresh
 olsrd-mod-dyn-gw
 olsrd-mod-jsoninfo
 olsrd-mod-txtinfo
 olsrd-mod-nameservice
-olsrd-mod-watchdog
 kmod-ipip
 
 # Uplink
@@ -88,9 +89,11 @@ falter-berlin-uplink-notunnel
 # Statistics
 luci-app-statistics
 collectd
+collectd-mod-cpu
 collectd-mod-dhcpleases
 collectd-mod-interface
 collectd-mod-iwinfo
+collectd-mod-load
 collectd-mod-network
 collectd-mod-olsrd
 collectd-mod-rrdtool

@@ -60,20 +60,22 @@ luci-i18n-falter-en
 
 # OLSR
 olsrd
+olsrd-utils
 olsrd-mod-arprefresh
 olsrd-mod-dyn-gw
 olsrd-mod-jsoninfo
 olsrd-mod-txtinfo
 olsrd-mod-nameservice
-olsrd-mod-watchdog
 kmod-ipip
 
 # Statistics
 luci-app-statistics
 collectd
+collectd-mod-cpu
 collectd-mod-dhcpleases
 collectd-mod-interface
 collectd-mod-iwinfo
+collectd-mod-load
 collectd-mod-network
 collectd-mod-olsrd
 collectd-mod-rrdtool

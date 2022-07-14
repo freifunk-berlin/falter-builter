@@ -11,7 +11,6 @@ falter-berlin-olsrd-defaults
 falter-berlin-statistics-defaults
 falter-berlin-system-defaults
 falter-berlin-uhttpd-defaults
-falter-profiles
 
 # Common
 mtr
@@ -34,6 +33,7 @@ falter-common
 falter-common-olsr
 falter-policyrouting
 falter-profiles
+falter-berlin-ssid-changer
 
 # GUI-basics
 uhttpd
@@ -53,7 +53,7 @@ luci-app-falter-owm-gui
 luci-proto-ppp
 luci-theme-bootstrap
 
-# GUI transaltion stuff
+# GUI translation stuff
 luci-i18n-base-de
 luci-i18n-base-en
 luci-i18n-firewall-de
@@ -73,12 +73,12 @@ luci-i18n-falter-policyrouting-en
 
 # OLSR
 olsrd
+olsrd-utils
 olsrd-mod-arprefresh
 olsrd-mod-dyn-gw
 olsrd-mod-jsoninfo
 olsrd-mod-txtinfo
 olsrd-mod-nameservice
-olsrd-mod-watchdog
 kmod-ipip
 
 # Uplink
