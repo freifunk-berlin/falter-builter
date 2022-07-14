@@ -11,7 +11,6 @@ falter-berlin-olsrd-defaults
 falter-berlin-statistics-defaults
 falter-berlin-system-defaults
 falter-berlin-uhttpd-defaults
-falter-profiles
 
 # Common
 mtr
@@ -52,7 +51,7 @@ luci-app-falter-owm-gui
 luci-proto-ppp
 luci-theme-bootstrap
 
-# GUI transaltion stuff
+# GUI translation stuff
 luci-i18n-base-de
 luci-i18n-base-en
 luci-i18n-firewall-de
