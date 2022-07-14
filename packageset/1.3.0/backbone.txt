@@ -1,0 +1,88 @@
+-wpad-mini
+#wpad
+
+# Defaults
+falter-berlin-dhcp-defaults
+falter-berlin-freifunk-defaults
+falter-berlin-network-defaults
+falter-berlin-olsrd-defaults
+falter-berlin-statistics-defaults
+falter-berlin-system-defaults
+falter-berlin-uhttpd-defaults
+
+# Common
+#dnsmasq is already provided via dnsmasq-full
+-dnsmasq
+
+# falter Common
+falter-common
+falter-common-olsr
+falter-berlin-tunneldigger
+
+# Utils
+tcpdump-mini
+mtr
+ip
+iperf3
+tmux
+vnstat
+ethtool
+iwinfo
+libiwinfo-lua
+
+# GUI-basics
+uhttpd
+uhttpd-mod-ubus
+luci
+luci-ssl
+luci-mod-falter
+luci-app-olsr
+luci-app-opkg
+luci-app-olsr-services
+luci-app-falter-owm
+luci-app-falter-owm-ant
+luci-app-falter-owm-cmd
+luci-app-falter-owm-gui
+luci-proto-ppp
+luci-theme-bootstrap
+
+# GUI transalation stuff
+luci-i18n-base-de
+luci-i18n-base-en
+luci-i18n-olsr-de
+luci-i18n-olsr-en
+luci-i18n-opkg-de
+luci-i18n-opkg-en
+luci-i18n-statistics-de
+luci-i18n-statistics-en
+luci-i18n-falter-de
+luci-i18n-falter-en
+luci-i18n-ffwizard-falter-de
+luci-i18n-ffwizard-falter-en
+luci-i18n-falter-policyrouting-de
+luci-i18n-falter-policyrouting-en
+
+# OLSR
+olsrd
+olsrd-utils
+olsrd-mod-arprefresh
+olsrd-mod-dyn-gw
+olsrd-mod-jsoninfo
+olsrd-mod-txtinfo
+olsrd-mod-nameservice
+kmod-ipip
+
+# Statistics
+luci-app-statistics
+collectd
+collectd-mod-cpu
+collectd-mod-dhcpleases
+collectd-mod-interface
+collectd-mod-iwinfo
+collectd-mod-load
+collectd-mod-network
+collectd-mod-olsrd
+collectd-mod-rrdtool
+collectd-mod-ping
+collectd-mod-uptime
+collectd-mod-memory
