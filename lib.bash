@@ -120,7 +120,7 @@ function is_8MiB_flash_device {
 
     # fail on purpose, if field didn't contain integer only
     # enforce 8MiB-List, if Router was specified in override-list
-    if [ "$flash" -le 8 ] || [[ $OVERRIDE_TO_8MiB == *$profile* ]]; then
+    if [ -n "$flash" ] && [ "$flash" -le 8 ] || [[ $OVERRIDE_TO_8MiB == *$profile* ]]; then
         printf "Board has 8MiB flash only. Removing some packages...\n"
 
         for P in $OMIT_LIST_8MiB; do
@@ -139,7 +139,7 @@ function is_32MiB_RAM_device {
     #echo "$(request_router_from_db "$profile")"
 
     ram=$(request_router_from_db "$profile" | cut -d'|' -f 5)
-    if [ "$ram" -le 32 ]; then
+    if [ -n "$ram" ] && [ "$ram" -le 32 ]; then
         echo "Board has ${ram}MiB RAM only. Modifying packagelist accordingly..."
 
         # add zram-swap-package
