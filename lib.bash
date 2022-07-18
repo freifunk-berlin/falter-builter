@@ -2,6 +2,13 @@
 #   FUNCTIONS   #
 #################
 
+# Omit declare and return-val warning
+# shellcheck disable=SC2155
+# banner uses \ literal, false positive
+# shellcheck disable=SC1004
+# omit warning on exported variables
+# shellcheck disable=SC2154
+
 function print_banner {
     printf '___.         .__.__   __
 \_ |_Freifunk|__|  |_/  |_  Berlin_____
@@ -51,8 +58,8 @@ EOF
 function patch_if_needed() {
     # check if a patch has already been applied (i.e. it's been merged upstream (for some versions))
     # and apply it only if it has not
-    patch -f -s -R --dry-run -p${2:-1} -i "$1" >/dev/null ||
-        patch -f -p${2:-1} -i "$1"
+    patch -f -s -R --dry-run -p"${2:-1}" -i "$1" >/dev/null ||
+        patch -f -p"${2:-1}" -i "$1"
 }
 
 function patch_buildsystem() {
@@ -69,7 +76,7 @@ function derive_underlying_openwrt_version {
     # '19.07-SNAPSHOT'. But we have only packagelists for 19.07... Solve that.
     regex="^[0-9][0-9].[0-9][0-9]"
     if [[ $1 =~ $regex ]]; then
-        echo $(echo $1 | cut -c 1-5)
+        echo "$1" | cut -c 1-5
     else
         echo "snapshot"
     fi
@@ -78,8 +85,7 @@ function derive_underlying_openwrt_version {
 function read_packageset {
     local PACKAGE_SET_PATH=$1
     # read packageset, while removing comments, empty lines and newlines
-    PACKAGE_SET=$(cat "$PACKAGE_SET_PATH" | sed -e '/^#/d; /^[[:space:]]*$/d' | tr '\n' ' ')
-    if [ $? != 0 ]; then
+    if ! PACKAGE_SET=$(sed -e '/^#/d; /^[[:space:]]*$/d' < "$PACKAGE_SET_PATH" | tr '\n' ' '); then
         echo "failed to read packageset. Did you give a correct path?"
         exit 2
     fi
@@ -103,7 +109,7 @@ function is_wave1_device {
 
 function subsitute_ct_driver {
     # generate a packagelist with ct-drivers/firmware substituted by normal one
-    local DEVICE_PACKAGES="$@"
+    local DEVICE_PACKAGES=$*
     printf "wave1 chipset detected...\n"
     printf "\tchange firmware and drivers in packagelist to non-ct counterparts...\n"
     PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET"" $DEVICE_PACKAGES" | sed -e 's/ath10k-firmware-qca988x-ct/ath10k-firmware-qca988x -ath10k-firmware-qca988x-ct/g; s/ath10k-firmware-qca9887-ct/ath10k-firmware-qca9887 -ath10k-firmware-qca9887-ct/g; s/kmod-ath10k-ct/kmod-ath10k -kmod-ath10k-ct/g')
@@ -120,11 +126,11 @@ function is_8MiB_flash_device {
 
     # fail on purpose, if field didn't contain integer only
     # enforce 8MiB-List, if Router was specified in override-list
-    if [ -n "$flash" ] && [ "$flash" -le 8 ] || [[ $OVERRIDE_TO_8MiB == *$profile* ]]; then
+    if [ -n "$flash" ] && [ "$flash" -le 8 ] || [[ "$OVERRIDE_TO_8MiB" == *$profile* ]]; then
         printf "Board has 8MiB flash only. Removing some packages...\n"
 
         for P in $OMIT_LIST_8MiB; do
-            PACKAGE_SET_DEVICE=$(echo "$PACKAGE_SET_DEVICE" | sed -e "s|$P||g")
+            PACKAGE_SET_DEVICE=${PACKAGE_SET_DEVICE//$P/}
         done
         printf "\tdone.\n"
     fi

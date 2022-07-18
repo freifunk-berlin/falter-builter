@@ -1,31 +1,36 @@
 #!/bin/bash
 
+# shellcheck disable=SC2155
+# shellcheck disable=SC1091
+
 # do not use 'set -e'. It will abort a whole build if, i.e. the
 # memory of a single 4MB-Device exceeds.
 # set -e
 set -o pipefail
 
 REALPATH_SCRIPT=$(realpath "$0")
-BUILTER_DIR=$(dirname "$REALPATH_SCRIPT")
+export BUILTER_DIR=$(dirname "$REALPATH_SCRIPT")
 
 RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
 
 # General variables
 FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed/"
 FREIFUNK_RELEASE=""
-OPENWRT_TOH="https://openwrt.org/_media/toh_dump_tab_separated.gz"
+export OPENWRT_TOH="https://openwrt.org/_media/toh_dump_tab_separated.gz"
 
 # list of packages, that get omitted on 8 MiB devices
-OMIT_LIST_8MiB="
+export OMIT_LIST_8MiB="
     mtr
     iperf3
     tmux
     vnstat
     "
 # list of devices, that have technically 16 MiB flash, but have two partitions a 8 MiB
-OVERRIDE_TO_8MiB="
+export OVERRIDE_TO_8MiB="
     ubnt_unifiac-mesh
 "
+# script dependencies (Debian/Ubuntu-centric)
+SCRIPT_DEPENDS="awk curl gawk grep git gettext printf python3 rsync sed unzip wget sqlite3"
 
 source ./lib.bash
 
@@ -159,10 +164,8 @@ if [ -z "$PARSER_FALTER_VERSION" ] || [ -z "$PARSER_TARGET" ] || [ -z "$PARSER_S
 fi
 
 # check for dependencies.
-SCRIPT_DEPENDS="awk curl gawk grep git gettext printf python3 rsync sed unzip wget sqlite3"
 for DEP in $SCRIPT_DEPENDS; do
-    type "$DEP" >/dev/null
-    if [ $? != 0 ]; then
+    if ! type "$DEP" &>/dev/null; then
         echo "$DEP is not installed, but needed for this script."
         exit 1
     fi
@@ -192,46 +195,46 @@ function start_build {
     fi
 
     local TMP=$2 # slice packageset-name from path
-    local PKG_SET=$(echo $TMP | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
+    local PKG_SET=$(echo "$TMP" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
     local DEVICE=$3
 
-    FILENAME=$(basename $IMAGE_BUILDER_URL)
-    FOLDERNAME=$(basename $FILENAME .tar.xz)
-    BRANCH=$(derive_branch_from_url $IMAGE_BUILDER_URL)
-    [ -z $BRANCH ] && BRANCH="snapshot"
+    FILENAME=$(basename "$IMAGE_BUILDER_URL")
+    FOLDERNAME=$(basename "$FILENAME" .tar.xz)
+    BRANCH=$(derive_branch_from_url "$IMAGE_BUILDER_URL")
+    [ -z "$BRANCH" ] && BRANCH="snapshot"
 
     echo "building using: $IMAGE_BUILDER_URL"
     echo "selected branch: $BRANCH"
 
-    if [ -z $IMAGE_BUILDER_PATH ]; then
+    if [ -z "$IMAGE_BUILDER_PATH" ]; then
         # store imagebuilders in cache. Reload, if there is a newer version avaiable
         local CACHE="../imagebuilder_cache"
         if [ ! -d $CACHE ]; then mkdir -p $CACHE; fi
-        cd $CACHE
+        cd $CACHE || exit 2
 
         printf "loading imagebuilder from the internet, if newer...\n"
-        wget -q -N --no-if-modified-since $IMAGE_BUILDER_URL
-        cd ../build
+        wget -q -N --no-if-modified-since "$IMAGE_BUILDER_URL"
+        cd ../build || exit 2
         printf "\tdone.\n"
 
         printf "pull imagebuilder from cache-dir\n"
-        cp ../imagebuilder_cache/$FILENAME $FILENAME
+        cp "../imagebuilder_cache/$FILENAME" "$FILENAME"
         printf "\tdone.\n"
     else
         printf "copy local imagebuilder to build-directory..."
-        cp ../$IMAGE_BUILDER_PATH $FILENAME
+        cp "../$IMAGE_BUILDER_PATH" "$FILENAME"
         printf "\tdone.\n"
     fi
 
     printf "Extracting imagebuilder...\n"
 
-    rm -rf $FOLDERNAME ib
-    tar -xJf $FILENAME
-    mv $FOLDERNAME ib
+    rm -rf "$FOLDERNAME" ib
+    tar -xJf "$FILENAME"
+    mv "$FOLDERNAME" ib
     FOLDERNAME="ib"
     printf "\tdone.\n"
 
-    cd $FOLDERNAME
+    cd "$FOLDERNAME" || exit 2
     printf "start patching imagebuilder...\n"
     patch_buildsystem
     printf "\tdone.\n"
@@ -272,8 +275,7 @@ function start_build {
     curl -s "$URL" >"keys/$FINGERPRINT"
 
     # check, if we really got a key
-    grep "untrusted comment:" "keys/$FINGERPRINT" >/dev/null
-    if [ $? != 0 ]; then
+    if ! grep "untrusted comment:" "keys/$FINGERPRINT" >/dev/null; then
         echo -e "\nThe loaded file apparently doesn't contain a valid key!\n"
         exit 2
     fi
@@ -300,7 +302,7 @@ function start_build {
     fi
     # move binaries into central firmware-dir, sort them for packagesets, there was given one.
     if [ "$PKG_SET" ]; then
-        rsync -a --remove-source-files bin/targets/* ../../firmwares/$PKG_SET/
+        rsync -a --remove-source-files bin/targets/* "../../firmwares/$PKG_SET/"
     else
         rsync -a --remove-source-files bin/targets/* ../../firmwares/
     fi
@@ -312,7 +314,7 @@ function start_build {
 #    MAIN    #
 ##############
 
-PARSER_OWT=$(derive_underlying_openwrt_version $FREIFUNK_OPENWRT_BASE)
+export PARSER_OWT=$(derive_underlying_openwrt_version "$FREIFUNK_OPENWRT_BASE")
 
 if [ "$PARSER_PACKAGESET" == "all" ]; then
     # split off "-snapshot" for stable-release-snapshots, so we can use the designated stable-packagelist
@@ -332,7 +334,7 @@ if [ "$PARSER_PACKAGESET" == "all" ]; then
     fi
 
     echo "Packagelists to be build:"
-    echo $PSET_PATHS
+    echo "$PSET_PATHS"
 else
     read_packageset "$PARSER_PACKAGESET"
 fi
@@ -344,11 +346,12 @@ rm -rf firmwares/*
 mkdir -p build
 rm -rf build/*
 sleep 3 # avoid strange issues with database...
-cd build
+cd build || exit 2
 printf "\tdone.\n"
 
 # read command-line parameters
-CONF_RELEASE="$PARSER_OWT"
+# ToDo: unifi the variable names later on...
+# CONF_RELEASE="$PARSER_OWT"
 CONF_TARGET="$PARSER_TARGET"
 CONF_SUBTARGET="$PARSER_SUBTARGET"
 CONF_DEVICE="$PARSER_PROFILE"
@@ -358,7 +361,7 @@ build_router_db
 
 # if openwrt_base is "master": change to "snapshots". That is the correct
 # directory for downloading openwrt-master
-if [ $FREIFUNK_OPENWRT_BASE == "master" ]; then
+if [ "$FREIFUNK_OPENWRT_BASE" == "master" ]; then
     RELEASE_LINK_BASE="https://downloads.openwrt.org/"
     FREIFUNK_OPENWRT_BASE="snapshots"
 fi
@@ -367,9 +370,9 @@ if [ -z "$CONF_TARGET" ] && [ -z "$IMAGE_BUILDER_PATH" ]; then
     # build one release for all targets
     RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
     for target in $(fetch_subdirs "$RELEASE_LINK"); do
-        for subtarget in $(fetch_subdirs $RELEASE_LINK$target); do
-            imagebuilder=$(fetch_subdirs $RELEASE_LINK$PARSER_PROFILE$target$subtarget | grep imagebuilder)
-            start_build $RELEASE_LINK$target$subtarget$imagebuilder
+        for subtarget in $(fetch_subdirs "$RELEASE_LINK$target"); do
+            imagebuilder=$(fetch_subdirs "$RELEASE_LINK$PARSER_PROFILE$target$subtarget" | grep imagebuilder)
+            start_build "$RELEASE_LINK$target$subtarget$imagebuilder"
         done
     done
     exit
@@ -385,12 +388,12 @@ else
             for PKG_SET in $PSET_PATHS; do
                 echo "-> building three packagelists..."
                 read_packageset "../$PKG_SET"
-                start_build "$TARGET_LIST$IMAGEBUILDER" $PKG_SET $CONF_DEVICE
+                start_build "$TARGET_LIST$IMAGEBUILDER" "$PKG_SET" "$CONF_DEVICE"
             done
         else
             echo "-> building one packagelist only..."
             # "targets" is on purpose there. Otherwise that positonal argument would be empty.
-            start_build "$TARGET_LIST$IMAGEBUILDER" targets $CONF_DEVICE
+            start_build "$TARGET_LIST$IMAGEBUILDER" targets "$CONF_DEVICE"
         fi
         exit
     fi
@@ -401,7 +404,7 @@ else
             for PKG_SET in $PSET_PATHS; do
                 echo "-> building three packagelists..."
                 read_packageset "../$PKG_SET"
-                start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder" $PKG_SET
+                start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder" "$PKG_SET"
             done
         else
             echo "-> building one packagelist only..."
