@@ -1,9 +1,12 @@
+# shellcheck shell=bash
+# shellcheck disable=SC2059
+
 VERSION="$1"
 TARGET="$2"
 SUBTARGET="$3"
 REVISION="$4"
 # get current path of script. Thus we can call the script from everywhere.
-SCRIPTPATH=$(dirname $(readlink -f "$0"))
+SCRIPTPATH=$(dirname "$(readlink -f "$0")")
 
 mkdir -p "$SCRIPTPATH/../embedded-files/etc/" || exit 42
 

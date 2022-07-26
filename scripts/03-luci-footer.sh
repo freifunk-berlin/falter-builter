@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 VERSION="$1"
 TARGET="$2"
 SUBTARGET="$3"
