@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 OPENWRT_BASE="$1"
 
 # The change to network.js will be included in all future 21.02 and 19.07
@@ -6,9 +8,9 @@ OPENWRT_BASE="$1"
 [ "$OPENWRT_BASE" = "21.02.0" ] || [ "$OPENWRT_BASE" = "21.02.1" ] || exit 0
 
 OPENWRT_LUCI_COMMITID="8bd4e78ff27c3e516b197f6b7500367d6672d68b"
-SCRIPTPATH=$(dirname $(readlink -f "$0"))
+SCRIPTPATH=$(dirname "$(readlink -f "$0")")
 INSTDIR="$SCRIPTPATH/../embedded-files/www/luci-static/resources"
 
-mkdir -p $INSTDIR || exit 42
-wget -q -O $INSTDIR/network.js https://raw.githubusercontent.com/openwrt/luci/${OPENWRT_LUCI_COMMITID}/modules/luci-base/htdocs/luci-static/resources/network.js || exit 42
-chmod 644 $INSTDIR/network.js || exit 42
+mkdir -p "$INSTDIR" || exit 42
+wget -q -O "$INSTDIR"/network.js https://raw.githubusercontent.com/openwrt/luci/${OPENWRT_LUCI_COMMITID}/modules/luci-base/htdocs/luci-static/resources/network.js || exit 42
+chmod 644 "$INSTDIR"/network.js || exit 42
