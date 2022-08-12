@@ -3,10 +3,13 @@
 # shellcheck disable=SC2155
 # shellcheck disable=SC1091
 
-# do not use 'set -e'. It will abort a whole build if, i.e. the
-# memory of a single 4MB-Device exceeds.
-# set -e
+# use of 'set -o errexit' could abort a whole build if, i.e. the
+# memory of a single 4MB-Device exceeds. This should be used with
+# care.
+set -o errexit
 set -o pipefail
+# we use unset variables in if-conditions, i.e. line 390. Thus not activating
+# set -o nounset
 
 REALPATH_SCRIPT=$(realpath "$0")
 export BUILTER_DIR=$(dirname "$REALPATH_SCRIPT")
@@ -30,7 +33,8 @@ export OVERRIDE_TO_8MiB="
     ubnt_unifiac-mesh
 "
 # script dependencies (Debian/Ubuntu-centric)
-SCRIPT_DEPENDS="awk curl gawk grep git gettext printf python3 rsync sed unzip wget sqlite3"
+SCRIPT_DEPENDS="awk bzip2 curl flex gawk grep git gettext make patch printf \
+python3 rsync sed unzip wget xgettext xsltproc sqlite3"
 
 source ./lib.bash
 
@@ -293,7 +297,11 @@ function start_build {
 
             modify_packagelist "$profile"
 
+            # deactivate exits on error for imagebuilder only
+            set +o errexit
             make image PROFILE="$profile" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
+            set -o errexit
+
             PACKAGE_SET_DEVICE="" # empty packageset for use with next wave1-device
             echo "finished."
         done
@@ -302,7 +310,10 @@ function start_build {
 
         modify_packagelist "$DEVICE"
 
+        set +o errexit
         make image PROFILE="$DEVICE" PACKAGES="$PACKAGE_SET_DEVICE" FILES="../../embedded-files/" EXTRA_IMAGE_NAME="freifunk-falter-${FREIFUNK_RELEASE}"
+        set -o errexit
+
         PACKAGE_SET_DEVICE=""
     fi
     # move binaries into central firmware-dir, sort them for packagesets, there was given one.
