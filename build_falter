@@ -191,6 +191,7 @@ if ! curl --silent --fail "$FEEDURL" >/dev/null; then
     exit 2
 fi
 
+# construct the URL of the falter_release-file. It defines several values, that we need in the building process.
 COMMONFILEURL=$FEEDURL$(curl -s "${FEEDURL}"/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
 TMP=$(curl -s "$COMMONFILEURL" | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
 eval "$TMP"
@@ -330,7 +331,7 @@ function start_build {
 #    MAIN    #
 ##############
 
-export PARSER_OWT=$(derive_underlying_openwrt_version "$FREIFUNK_OPENWRT_BASE")
+export OPENWRT_BASE_VERSION=$(derive_underlying_openwrt_version "$FREIFUNK_OPENWRT_BASE")
 
 if [ "$PARSER_PACKAGESET" == "all" ]; then
     # split off "-snapshot" for stable-release-snapshots, so we can use the designated stable-packagelist
@@ -365,13 +366,6 @@ sleep 3 # avoid strange issues with database...
 cd build || exit 2
 printf "\tdone.\n"
 
-# read command-line parameters
-# ToDo: unifi the variable names later on...
-# CONF_RELEASE="$PARSER_OWT"
-CONF_TARGET="$PARSER_TARGET"
-CONF_SUBTARGET="$PARSER_SUBTARGET"
-CONF_DEVICE="$PARSER_PROFILE"
-
 # get OpenWrt ToH
 build_router_db
 
@@ -382,7 +376,7 @@ if [ "$FREIFUNK_OPENWRT_BASE" == "master" ]; then
     FREIFUNK_OPENWRT_BASE="snapshots"
 fi
 
-if [ -z "$CONF_TARGET" ] && [ -z "$IMAGE_BUILDER_PATH" ]; then
+if [ -z "$PARSER_TARGET" ] && [ -z "$IMAGE_BUILDER_PATH" ]; then
     # build one release for all targets
     RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
     for target in $(fetch_subdirs "$RELEASE_LINK"); do
@@ -396,35 +390,35 @@ else
     # there was given a release and a target
     RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
     # if there was defined a subtarget and option device, only build that.
-    if [ -n "$CONF_SUBTARGET" ] || [ -n "$IMAGE_BUILDER_PATH" ]; then
+    if [ -n "$PARSER_SUBTARGET" ] || [ -n "$IMAGE_BUILDER_PATH" ]; then
         # build directly that subtarget. if requested, for all image types.
-        TARGET_LIST="$RELEASE_LINK$CONF_TARGET/$CONF_SUBTARGET/"
+        TARGET_LIST="$RELEASE_LINK$PARSER_TARGET/$PARSER_SUBTARGET/"
         IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
         if [ "$PSET_PATHS" ]; then
             for PKG_SET in $PSET_PATHS; do
                 echo "-> building three packagelists..."
                 read_packageset "../$PKG_SET"
-                start_build "$TARGET_LIST$IMAGEBUILDER" "$PKG_SET" "$CONF_DEVICE"
+                start_build "$TARGET_LIST$IMAGEBUILDER" "$PKG_SET" "$PARSER_PROFILE"
             done
         else
             echo "-> building one packagelist only..."
             # "targets" is on purpose there. Otherwise that positonal argument would be empty.
-            start_build "$TARGET_LIST$IMAGEBUILDER" targets "$CONF_DEVICE"
+            start_build "$TARGET_LIST$IMAGEBUILDER" targets "$PARSER_PROFILE"
         fi
         exit
     fi
     # otherwise, fetch all subtargets and build them one after another.
-    for subtarget in $(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/"); do
-        imagebuilder=$(fetch_subdirs "$RELEASE_LINK$CONF_TARGET/$subtarget" | grep imagebuilder)
+    for subtarget in $(fetch_subdirs "$RELEASE_LINK$PARSER_TARGET/"); do
+        imagebuilder=$(fetch_subdirs "$RELEASE_LINK$PARSER_TARGET/$subtarget" | grep imagebuilder)
         if [ "$PSET_PATHS" ]; then
             for PKG_SET in $PSET_PATHS; do
                 echo "-> building three packagelists..."
                 read_packageset "../$PKG_SET"
-                start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder" "$PKG_SET"
+                start_build "$RELEASE_LINK$PARSER_TARGET/$subtarget$imagebuilder" "$PKG_SET"
             done
         else
             echo "-> building one packagelist only..."
-            start_build "$RELEASE_LINK$CONF_TARGET/$subtarget$imagebuilder"
+            start_build "$RELEASE_LINK$PARSER_TARGET/$subtarget$imagebuilder"
         fi
     done
     exit
