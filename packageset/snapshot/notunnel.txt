@@ -61,7 +61,6 @@ luci-i18n-olsr-de
 luci-i18n-opkg-de
 luci-i18n-statistics-de
 luci-i18n-falter-de
-luci-i18n-ffwizard-falter-en
 luci-i18n-ffwizard-falter-de
 luci-i18n-falter-policyrouting-de
 
