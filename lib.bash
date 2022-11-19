@@ -187,8 +187,6 @@ function generate_embedded_files {
     local TARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 7)
     local SUBTARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 8)
 
-    local OPENWRT_BASE=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 5)
-
     # Get the FREIFUNK_RELEASE variable from the falter feed
     # located in the falter-common package.
     [ "snapshot" == "$FALTERBRANCH" ] && FALTERBRANCH="master"
@@ -214,10 +212,6 @@ function generate_embedded_files {
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh "$url" "$fingerprint" || {
         echo "04-include-falter-feed.sh failed..."
-        exit 1
-    }
-    ../../scripts/06-luci-base-networkjs.sh "$OPENWRT_BASE" || {
-        echo "06-luci-base-networkjs.sh failed..."
         exit 1
     }
 }
