@@ -67,8 +67,6 @@ function patch_buildsystem() {
 
     # patch json-info, so that it will contain every image, not just the last one
     patch_if_needed ../../patches/append_new_images_overview_json.patch
-    # fix patch at building mikrotik devices. prepones https://github.com/openwrt/openwrt/pull/3262
-    patch_if_needed ../../patches/workaround-kernel2minor-path-length-limitation.patch 2
 }
 
 function derive_underlying_openwrt_version {
