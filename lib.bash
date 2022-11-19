@@ -216,10 +216,6 @@ function generate_embedded_files {
         echo "04-include-falter-feed.sh failed..."
         exit 1
     }
-    ../../scripts/05-olsrd-init-for-21-02-0.sh "$OPENWRT_BASE" || {
-        echo "05-olsrd-init-for-21-02-0.sh failed..."
-        exit 1
-    }
     ../../scripts/06-luci-base-networkjs.sh "$OPENWRT_BASE" || {
         echo "06-luci-base-networkjs.sh failed..."
         exit 1
