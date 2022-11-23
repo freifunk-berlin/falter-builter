@@ -108,8 +108,13 @@ while getopts dp:v:t:s:r:i:lh option; do
         ;;
     t)
         if [[ "$OPTARG" != -* ]]; then
-            echo "Target is: $OPTARG"
-            PARSER_TARGET="$OPTARG"
+            IFS='/' read optt optst <<< "$OPTARG"
+            echo "Target is: $optt"
+            PARSER_TARGET="$optt"
+            if [ -n "$optst" ]; then
+                echo "Sub-Target is: $optst"
+                PARSER_SUBTARGET="$optst"
+            fi
         else
             echo "Please give a target with '-t'."
             exit 1
