@@ -202,11 +202,13 @@ function generate_embedded_files {
         echo "02-favicon.sh failed..."
         exit 1
     }
-    ../../scripts/03-luci-footer.sh "$FREIFUNK_RELEASE" "$TARGET" "$SUBTARGET" "$FALTERBRANCH" "$FREIFUNK_REVISION" ||
-        {
-            echo "03-luci-footer.sh failed..."
-            exit 1
-        }
+    # TODO: convert the footer template to uc/uCode.
+    #
+    # ../../scripts/03-luci-footer.sh "$FREIFUNK_RELEASE" "$TARGET" "$SUBTARGET" "$FALTERBRANCH" "$FREIFUNK_REVISION" ||
+    #     {
+    #         echo "03-luci-footer.sh failed..."
+    #         exit 1
+    #     }
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh "$url" "$fingerprint" || {
         echo "04-include-falter-feed.sh failed..."
