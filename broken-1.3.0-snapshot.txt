@@ -1,0 +1,27 @@
+# Skip these while developing, they take very long to build
+# ath79/generic
+# ramips/mt7621
+
+# Doesn't provide any device profiles that could be built
+archs38/generic
+armvirt/32
+armvirt/64
+malta/be
+octeontx/generic
+realtek/rtl931x
+
+# Broken: cferam.000 - No such file or directory
+bcm4908/generic
+
+# Missing packages: kmod-at91-udc kmod-usb-gadget-eth kmod-usb-ohci
+at91/sama7
+
+# Missing packages: procd-ujail
+# bcm63xx/generic
+# bcm63xx/smp
+
+# Missing packages: layerscape-fman
+layerscape/armv8_64b
+
+# Missing packages: imx-bootlets uboot-mxs-mx23_olinuxino
+mxs/generic
