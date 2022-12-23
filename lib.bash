@@ -188,7 +188,7 @@ function generate_embedded_files {
     # Get the FREIFUNK_RELEASE variable from the falter feed
     # located in the falter-common package.
     [ "snapshot" == "$FALTERBRANCH" ] && FALTERBRANCH="master"
-    [ $FALTERBRANCH != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
+    [ "$FALTERBRANCH" != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
 
     # clear out any old embedded_files
     rm -rf ../../embedded-files/*

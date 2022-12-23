@@ -108,7 +108,7 @@ while getopts dp:v:t:s:r:i:lh option; do
         ;;
     t)
         if [[ "$OPTARG" != -* ]]; then
-            IFS='/' read optt optst <<< "$OPTARG"
+            IFS='/' read -r optt optst <<< "$OPTARG"
             echo "Target is: $optt"
             PARSER_TARGET="$optt"
             if [ -n "$optst" ]; then
