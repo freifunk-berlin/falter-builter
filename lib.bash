@@ -84,14 +84,23 @@ function read_packageset {
     local PACKAGE_SET_PATH=$1
     # read packageset, while removing comments, empty lines and newlines
     if ! PACKAGE_SET=$(sed -e '/^#/d; /^[[:space:]]*$/d' < "$PACKAGE_SET_PATH" | tr '\n' ' '); then
-        echo "failed to read packageset. Did you give a correct path?"
+        # write to stderr, to get the prompt printed outside the subshell too
+        >&2 echo "failed to read packageset. Did you give a correct path?"
         exit 2
     fi
 }
 
 function fetch_subdirs {
-    URL=$1
-    curl -s "$URL" | grep href | grep -v 'snapshots\|releases' | awk -F'"' '{print $4}'
+    local URL=$1
+    local raw_html
+
+    raw_html=$(curl -s "$URL" | grep href | grep -v 'snapshots\|releases')
+    if [ -z "$raw_html" ]; then
+        # write to stderr, to get the prompt printed outside the subshell too
+        >&2 echo "No subdirectories found. Did you give an inproper target or subtarget?"
+        exit 2
+    fi
+    echo "$raw_html" | awk -F'"' '{print $4}'
 }
 
 function is_wave1_device {
@@ -188,7 +197,7 @@ function generate_embedded_files {
     # Get the FREIFUNK_RELEASE variable from the falter feed
     # located in the falter-common package.
     [ "snapshot" == "$FALTERBRANCH" ] && FALTERBRANCH="master"
-    [ "$FALTERBRANCH" != "master" ] && FALTERBRANCH="openwrt-$PARSER_OWT"
+    [ "$FALTERBRANCH" != "master" ] && FALTERBRANCH="openwrt-$OPENWRT_BASE_VERSION"
 
     # clear out any old embedded_files
     rm -rf ../../embedded-files/*
