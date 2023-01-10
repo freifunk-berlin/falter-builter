@@ -191,8 +191,13 @@ function generate_embedded_files {
     local url="$2"
     local fingerprint="$3"
     # call scripts to generate dynamic data in embedded files
-    local TARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 7)
-    local SUBTARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 8)
+    if [ "$FREIFUNK_RELEASE" == "snapshot" ]; then
+        local TARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 6)
+        local SUBTARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 7)
+    else
+        local TARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 7)
+        local SUBTARGET=$(echo "$IMAGE_BUILDER_URL" | cut -d'/' -f 8)
+    fi
 
     # Get the FREIFUNK_RELEASE variable from the falter feed
     # located in the falter-common package.
