@@ -1,7 +1,3 @@
-# Skip these while developing, they take very long to build
-ath79/generic
-ramips/mt7621
-
 # Doesn't provide any device profiles that could be built
 archs38/generic
 armvirt/32
