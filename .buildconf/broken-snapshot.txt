@@ -1,5 +1,4 @@
 # Doesn't provide any device profiles that could be built
-archs38/generic
 armvirt/32
 armvirt/64
 malta/be
