@@ -2,6 +2,7 @@
 archs38/generic
 armvirt/32
 armvirt/64
+imx/cortexa7
 malta/be
 octeontx/generic
 realtek/rtl931x
