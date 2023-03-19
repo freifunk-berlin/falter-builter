@@ -63,6 +63,11 @@ luci-i18n-falter-de
 luci-i18n-ffwizard-falter-de
 luci-i18n-falter-policyrouting-de
 
+# service registrar
+falter-berlin-service-registrar
+luci-app-falter-service-registrar
+luci-i18n-falter-service-registrar-de
+
 # OLSR
 olsrd
 olsrd-mod-arprefresh
