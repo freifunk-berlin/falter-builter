@@ -27,6 +27,9 @@ export OMIT_LIST_8MiB="
     iperf3
     tmux
     vnstat
+    falter-berlin-service-registrar
+    luci-app-falter-service-registrar
+    luci-i18n-falter-service-registrar-de
     "
 # list of devices, that have technically 16 MiB flash, but have two partitions a 8 MiB
 export OVERRIDE_TO_8MiB="
