@@ -37,6 +37,9 @@ function request_router_from_db {
     local response
 
     response=$(
+        # sometimes different routers share the same image
+        # like UniFi AC Mesh and UniFi AC Mesh Pro. Ensure to only
+        # return one dataset and take the first one then.
         sqlite3 -batch "$BUILTER_DIR/build/toh.db" <<EOF
 SELECT
     brand, model, version, flashmb, rammb
@@ -46,13 +49,10 @@ WHERE
     firmwareopenwrtinstallurl LIKE '%$board%' OR
     firmwareopenwrtupgradeurl LIKE '%$board%' OR
     firmwareopenwrtsnapshotinstallurl LIKE '%$board%' OR
-    firmwareopenwrtsnapshotupgradeurl LIKE '%$board%';
+    firmwareopenwrtsnapshotupgradeurl LIKE '%$board%'
+LIMIT 1;
 EOF
     )
-    # sometimes different routers share the same image
-    # like UniFi AC Mesh and UniFi AC Mesh Pro. Ensure to only
-    # return one dataset and take the first one then.
-    echo "$response" | head -n1
 }
 
 function patch_if_needed() {
@@ -129,7 +129,7 @@ function is_8MiB_flash_device {
     local DEVICE_PACKAGES=$(echo "$@" | cut -d' ' -f 2-)
     local flash
 
-    flash=$(request_router_from_db "$profile" | cut -d'|' -f 4)
+    flash="$(request_router_from_db "$profile" | cut -d'|' -f 4)"
 
     # fail on purpose, if field didn't contain integer only
     # enforce 8MiB-List, if Router was specified in override-list
@@ -151,7 +151,7 @@ function is_32MiB_RAM_device {
 
     #echo "$(request_router_from_db "$profile")"
 
-    ram=$(request_router_from_db "$profile" | cut -d'|' -f 5)
+    ram="$(request_router_from_db "$profile" | cut -d'|' -f 5)"
     if [ -n "$ram" ] && [ "$ram" -le 32 ]; then
         echo "Board has ${ram}MiB RAM only. Modifying packagelist accordingly..."
 
