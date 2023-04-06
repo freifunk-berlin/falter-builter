@@ -216,7 +216,7 @@ function generate_embedded_files {
         echo "02-favicon.sh failed..."
         exit 1
     }
-    ../../scripts/03-luci-footer.sh "$FREIFUNK_RELEASE" "$TARGET" "$SUBTARGET" "$FALTERBRANCH" "$FREIFUNK_REVISION" ||
+    ../../scripts/03-luci-footer.sh "$FREIFUNK_RELEASE" "$TARGET/$SUBTARGET" "$FALTERBRANCH" "$FREIFUNK_REVISION" ||
         {
             echo "03-luci-footer.sh failed..."
             exit 1

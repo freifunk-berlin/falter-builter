@@ -60,10 +60,7 @@ Options:
     Maps directly to the directories at https://firmware.berlin.freifunk.net/feed/
 
   -t [TARGET]
-    target like 'ath79'
-
-  -s [SUBTARGET]
-    something like 'generic'. This is optional.
+    target like 'ath79/generic' or 'x86/64'.
 
   -r [ROUTER-PROFILE]
     give a router-profile like 'glinet_gl-ar150'. This is optional.
@@ -115,26 +112,16 @@ while getopts dp:v:t:s:r:i:lh option; do
         ;;
     t)
         if [[ "$OPTARG" != -* ]]; then
-            IFS='/' read -r optt optst <<< "$OPTARG"
-            echo "Target is: $optt"
-            PARSER_TARGET="$optt"
-            if [ -n "$optst" ]; then
-                echo "Sub-Target is: $optst"
-                PARSER_SUBTARGET="$optst"
-            fi
+            echo "Target is: $OPTARG"
+            PARSER_TARGET="$OPTARG"
         else
-            echo "Please give a target with '-t'."
+            echo "Please specify a target with option '-t'."
             exit 1
         fi
         ;;
     s)
-        if [[ "$OPTARG" != -* ]]; then
-            echo "Sub-Target is: $OPTARG"
-            PARSER_SUBTARGET="$OPTARG"
-        else
-            echo "Please give a subtarget with option '-s'."
-            exit 1
-        fi
+        echo "The '-s' option has been removed, use e.g. '-t ath79/generic'."
+        exit 1
         ;;
     r)
         if [[ "$OPTARG" != -* ]]; then
@@ -166,12 +153,11 @@ done
 printf "\n"
 
 # check if we got all options we would need.
-if [ -z "$PARSER_FALTER_VERSION" ] || [ -z "$PARSER_TARGET" ] || [ -z "$PARSER_SUBTARGET" ] || [ -z "$PARSER_PACKAGESET" ]; then
+if [ -z "$PARSER_FALTER_VERSION" ] || [ -z "$PARSER_TARGET" ] || [ -z "$PARSER_PACKAGESET" ]; then
     printf "Please specify at least theses options:\n\
     -v\t[falter-version],\n\
     -p\t[packagelist],\n\
-    -t\t[target],\n\
-    -s\t[subtarget]\n\n"
+    -t\t[target]\n\n"
     exit 1
 fi
 
@@ -388,41 +374,21 @@ if [ -z "$PARSER_TARGET" ] && [ -z "$IMAGE_BUILDER_PATH" ]; then
             start_build "$RELEASE_LINK$target$subtarget$imagebuilder"
         done
     done
-    exit
 else
     # there was given a release and a target
     RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
-    # if there was defined a subtarget and option device, only build that.
-    if [ -n "$PARSER_SUBTARGET" ] || [ -n "$IMAGE_BUILDER_PATH" ]; then
-        # build directly that subtarget. if requested, for all image types.
-        TARGET_LIST="$RELEASE_LINK$PARSER_TARGET/$PARSER_SUBTARGET/"
-        IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
-        if [ "$PSET_PATHS" ]; then
-            for PKG_SET in $PSET_PATHS; do
-                echo "-> building three packagelists..."
-                read_packageset "../$PKG_SET"
-                start_build "$TARGET_LIST$IMAGEBUILDER" "$PKG_SET" "$PARSER_PROFILE"
-            done
-        else
-            echo "-> building one packagelist only..."
-            # "targets" is on purpose there. Otherwise that positonal argument would be empty.
-            start_build "$TARGET_LIST$IMAGEBUILDER" targets "$PARSER_PROFILE"
-        fi
-        exit
+    # build directly that target. if requested, for all image types.
+    TARGET_LIST="$RELEASE_LINK$PARSER_TARGET/"
+    IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
+    if [ "$PSET_PATHS" ]; then
+        for PKG_SET in $PSET_PATHS; do
+            echo "-> building three packagelists..."
+            read_packageset "../$PKG_SET"
+            start_build "$TARGET_LIST$IMAGEBUILDER" "$PKG_SET" "$PARSER_PROFILE"
+        done
+    else
+        echo "-> building one packagelist only..."
+        # "targets" is on purpose there. Otherwise that positonal argument would be empty.
+        start_build "$TARGET_LIST$IMAGEBUILDER" targets "$PARSER_PROFILE"
     fi
-    # otherwise, fetch all subtargets and build them one after another.
-    for subtarget in $(fetch_subdirs "$RELEASE_LINK$PARSER_TARGET/"); do
-        imagebuilder=$(fetch_subdirs "$RELEASE_LINK$PARSER_TARGET/$subtarget" | grep imagebuilder)
-        if [ "$PSET_PATHS" ]; then
-            for PKG_SET in $PSET_PATHS; do
-                echo "-> building three packagelists..."
-                read_packageset "../$PKG_SET"
-                start_build "$RELEASE_LINK$PARSER_TARGET/$subtarget$imagebuilder" "$PKG_SET"
-            done
-        else
-            echo "-> building one packagelist only..."
-            start_build "$RELEASE_LINK$PARSER_TARGET/$subtarget$imagebuilder"
-        fi
-    done
-    exit
 fi
