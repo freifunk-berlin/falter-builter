@@ -17,7 +17,7 @@ export BUILTER_DIR=$(dirname "$REALPATH_SCRIPT")
 RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
 
 # General variables
-FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed/"
+FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed"
 FREIFUNK_RELEASE=""
 export OPENWRT_TOH="https://openwrt.org/_media/toh_dump_tab_separated.gz"
 
@@ -171,19 +171,18 @@ done
 
 print_banner
 
-# repository derives directly from the falter-version. Download freifunk_release
-# file and determine openwrt-version by its variables
-BASE_URL=$(echo "$FALTER_REPO_BASE" | cut -d' ' -f 3)
-FEEDURL="$BASE_URL$PARSER_FALTER_VERSION/packages/mips_24kc/falter/"
-if ! curl --silent --fail "$FEEDURL" >/dev/null; then
-    echo "Error: failed retrieving feed URL. Wrong version '$PARSER_FALTER_VERSION'?"
-    exit 2
+export FREIFUNK_RELEASE="$PARSER_FALTER_VERSION"
+export FREIFUNK_REVISION=""
+export FREIFUNK_OPENWRT_BASE="snapshot"
+FEED_VERSION="snapshot"
+if [[ $FREIFUNK_RELEASE =~ ^1\.3\.0 ]]; then
+    FREIFUNK_OPENWRT_BASE="22.03-SNAPSHOT"
+    FEED_VERSION="1.3.0-snapshot"
 fi
-
-# construct the URL of the falter_release-file. It defines several values, that we need in the building process.
-COMMONFILEURL=$FEEDURL$(curl -s "${FEEDURL}"/Packages | sed -n '/falter-common$/,/^$/p' | awk '{if(/Filename: /) print $2}')
-TMP=$(curl -s "$COMMONFILEURL" | tar xzOf - ./data.tar.gz | tar xzOf - ./etc/freifunk_release)
-eval "$TMP"
+if [[ $FREIFUNK_RELEASE =~ ^1\.2\.3 ]]; then
+    FREIFUNK_OPENWRT_BASE="21.02-SNAPSHOT"
+    FEED_VERSION="1.2.3-snapshot"
+fi
 
 function start_build {
     # use local imagebuilder if it was given
@@ -262,7 +261,7 @@ function start_build {
     INSTR_SET=$(grep "openwrt_base" repositories.conf | awk -F'/' "{print \$$ispos}")
     echo "selected instruction set: $INSTR_SET"
 
-    REPO="$FALTER_REPO_BASE/$PARSER_FALTER_VERSION/packages/$INSTR_SET/falter"
+    REPO="$FALTER_REPO_BASE/$FEED_VERSION/packages/$INSTR_SET/falter"
     echo "injecting repo line: $REPO"
     echo "$REPO" >>repositories.conf
 
@@ -323,12 +322,7 @@ function start_build {
 export OPENWRT_BASE_VERSION=$(derive_underlying_openwrt_version "$FREIFUNK_OPENWRT_BASE")
 
 if [ "$PARSER_PACKAGESET" == "all" ]; then
-    # split off "-snapshot" for stable-release-snapshots, so we can use the designated stable-packagelist
-    if echo "$FREIFUNK_RELEASE" | grep "snapshot\|rc"; then
-        ff_release=$(echo "$FREIFUNK_RELEASE" | cut -d'-' -f1)
-    else
-        ff_release="$FREIFUNK_RELEASE"
-    fi
+    ff_release=$(echo "$FREIFUNK_RELEASE" | cut -d'-' -f1)
 
     # build all imageflavours. For this, get paths of packagesets
     # fetch paths of packagelists (depends on openwrt-version). If not unique, chose most recent version of possibilities.
@@ -360,7 +354,7 @@ build_router_db
 
 # if openwrt_base is "master": change to "snapshots". That is the correct
 # directory for downloading openwrt-master
-if [ "$FREIFUNK_OPENWRT_BASE" == "master" ]; then
+if [ "$FREIFUNK_OPENWRT_BASE" == "master" ] || [ "$FREIFUNK_OPENWRT_BASE" == "snapshot" ] ; then
     RELEASE_LINK_BASE="https://downloads.openwrt.org/"
     FREIFUNK_OPENWRT_BASE="snapshots"
 fi
