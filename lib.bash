@@ -34,13 +34,11 @@ function build_router_db {
 
 function request_router_from_db {
     local board="$1"
-    local response
 
-    response=$(
-        # sometimes different routers share the same image
-        # like UniFi AC Mesh and UniFi AC Mesh Pro. Ensure to only
-        # return one dataset and take the first one then.
-        sqlite3 -batch "$BUILTER_DIR/build/toh.db" <<EOF
+    # sometimes different routers share the same image
+    # like UniFi AC Mesh and UniFi AC Mesh Pro. Ensure to only
+    # return one dataset and take the first one then.
+    sqlite3 -batch "$BUILTER_DIR/build/toh.db" <<EOF
 SELECT
     brand, model, version, flashmb, rammb
 FROM
@@ -52,7 +50,6 @@ WHERE
     firmwareopenwrtsnapshotupgradeurl LIKE '%$board%'
 LIMIT 1;
 EOF
-    )
 }
 
 function patch_if_needed() {
@@ -97,7 +94,7 @@ function fetch_subdirs {
     raw_html=$(curl -s "$URL" | grep href | grep -v 'snapshots\|releases')
     if [ -z "$raw_html" ]; then
         # write to stderr, to get the prompt printed outside the subshell too
-        >&2 echo "No subdirectories found. Did you give an inproper target or subtarget?"
+        >&2 echo "No subdirectories found in $URL - Did you give an inproper target or subtarget?"
         exit 2
     fi
     echo "$raw_html" | awk -F'"' '{print $4}'
@@ -133,7 +130,7 @@ function is_8MiB_flash_device {
 
     # fail on purpose, if field didn't contain integer only
     # enforce 8MiB-List, if Router was specified in override-list
-    if [ -n "$flash" ] && [ "$flash" -le 8 ] || [[ "$OVERRIDE_TO_8MiB" == *$profile* ]]; then
+    if [ -n "$flash" ] && [ "$flash" -le 8 ] 2>/dev/null || [[ "$OVERRIDE_TO_8MiB" == *$profile* ]]; then
         printf "Board has 8MiB flash only. Removing some packages...\n"
 
         for P in $OMIT_LIST_8MiB; do
@@ -224,6 +221,11 @@ function generate_embedded_files {
     export REPO # export repo line to inject into images. contains whitespace...
     ../../scripts/04-include-falter-feed.sh "$url" "$fingerprint" || {
         echo "04-include-falter-feed.sh failed..."
+        exit 1
+    }
+
+    ../../scripts/05-inject-freifunk-release.sh "$FREIFUNK_RELEASE" "$FREIFUNK_OPENWRT_BASE" || {
+        echo "05-inject-freifunk-release.sh failed..."
         exit 1
     }
 }
