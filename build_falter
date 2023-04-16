@@ -36,7 +36,7 @@ export OVERRIDE_TO_8MiB="
     ubnt_unifiac-mesh
 "
 # script dependencies (Debian/Ubuntu-centric)
-SCRIPT_DEPENDS="awk bzip2 curl flex gawk grep git gettext make patch printf \
+SCRIPT_DEPENDS="awk bzip2 curl flex gawk grep git gettext make printf \
 python3 rsync sed unzip wget xgettext xsltproc sqlite3"
 
 source ./lib.bash
@@ -244,9 +244,6 @@ function start_build {
     printf "\tdone.\n"
 
     cd "$FOLDERNAME" || exit 2
-    printf "start patching imagebuilder...\n"
-    patch_buildsystem
-    printf "\tdone.\n"
 
     if [ "$PARSER_LIST_ROUTERS" == "y" ]; then
         # if ask for, show avaiable router-profiles and quit

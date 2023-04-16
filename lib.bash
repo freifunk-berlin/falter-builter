@@ -52,20 +52,6 @@ LIMIT 1;
 EOF
 }
 
-function patch_if_needed() {
-    # check if a patch has already been applied (i.e. it's been merged upstream (for some versions))
-    # and apply it only if it has not
-    patch -f -s -R --dry-run -p"${2:-1}" -i "$1" >/dev/null ||
-        patch -f -p"${2:-1}" -i "$1"
-}
-
-function patch_buildsystem() {
-    # applies some patches to the buildsystem to allow us building falter in our way.
-
-    # patch json-info, so that it will contain every image, not just the last one
-    patch_if_needed ../../patches/append_new_images_overview_json.patch
-}
-
 function derive_underlying_openwrt_version {
     # OpenWrt-Version from freifunk-release file could be something like
     # '19.07-SNAPSHOT'. But we have only packagelists for 19.07... Solve that.
