@@ -183,7 +183,7 @@ elif [[ $PARSER_FALTER_VERSION =~ ^1\.2\.3 ]]; then
     if [[ $PARSER_FALTER_VERSION =~ snapshot ]]; then
         FREIFUNK_OPENWRT_BASE="21.02-SNAPSHOT"
     else
-        FREIFUNK_OPENWRT_BASE="21.02.5"
+        FREIFUNK_OPENWRT_BASE="21.02.6"
     fi
 else
     FREIFUNK_OPENWRT_BASE="snapshot"
