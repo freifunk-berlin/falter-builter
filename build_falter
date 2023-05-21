@@ -185,6 +185,9 @@ elif [[ $PARSER_FALTER_VERSION =~ ^1\.2\.3 ]]; then
     else
         FREIFUNK_OPENWRT_BASE="21.02.7"
     fi
+elif [[ $PARSER_FALTER_VERSION =~ ^testbuildbot ]]; then
+    FEED_VERSION="testbuildbot"
+    FREIFUNK_OPENWRT_BASE="snapshot"
 else
     FREIFUNK_OPENWRT_BASE="snapshot"
     FEED_VERSION="snapshot"
