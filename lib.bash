@@ -25,10 +25,9 @@ function build_router_db {
     # like i.e. flash-size
     printf "loading OpenWrt ToH...\n"
 
-    wget -q "$OPENWRT_TOH" -O "$BUILTER_DIR/build/toh.gz"
-    gunzip "$BUILTER_DIR/build/toh.gz"
+    wget -q "$OPENWRT_TOH" -O "$BUILTER_DIR/build/toh.csv"
 
-    echo -e '.separator "\t"\n.import '"$BUILTER_DIR/build/toh"' toh' | sqlite3 "$BUILTER_DIR/build/toh.db"
+    echo -e '.separator "\t"\n.import '"$BUILTER_DIR/build/toh.csv"' toh' | sqlite3 "$BUILTER_DIR/build/toh.db"
     printf "\tdone.\n"
 }
 
