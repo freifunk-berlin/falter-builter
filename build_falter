@@ -19,7 +19,7 @@ RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
 # General variables
 FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed"
 FREIFUNK_RELEASE=""
-export OPENWRT_TOH="https://openwrt.org/_media/toh_dump_tab_separated.gz"
+export OPENWRT_TOH="https://firmware.berlin.freifunk.net/openwrt-table-of-hardware.csv"
 
 # list of packages, that get omitted on 8 MiB devices
 export OMIT_LIST_8MiB="
