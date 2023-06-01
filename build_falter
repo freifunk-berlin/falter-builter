@@ -262,6 +262,15 @@ function start_build {
         exit 0
     fi
 
+    # matches the router profiles in the make-info output only
+    local profiles=$(make info | sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p')
+    # check for image-profile. Exit, if given profile is invalid. Exclude case, in which a whole target gets build
+    if [ -z "$(echo "$profiles" | sed -n "/^$DEVICE$/p")" ] && [ -n "$DEVICE" ]; then
+        echo "Router profile mismatch: There is no router profile \"$DEVICE\"."
+        echo "Please recheck with '-r' that you spelled the profile name right."
+        exit 5
+    fi
+
     # Target is in different position in the URL, depending on the OpenWrt version.
     case $BRANCH in
     snapshot)
