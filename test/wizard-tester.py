@@ -14,7 +14,7 @@ import sys
 
 
 ## config ##
-luci_webaddress = "http://frei.funk"
+luci_webaddress = "http://192.168.42.1"
 luci_timeout_long = 12
 luci_timeout = 2
 
