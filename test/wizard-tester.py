@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
+from pyvirtualdisplay import Display
 import argparse
 from argparse import RawTextHelpFormatter
 from time import sleep
@@ -118,6 +119,8 @@ def click_next(browser):
         by=By.CLASS_NAME, value="cbi-button.cbi-button-save")
     button.click()
 
+display = Display(visible=0, size=(1280, 720))
+display.start()
 
 opt = Options()
 opt.set_preference("intl.accept_languages", "de-DE")
@@ -260,5 +263,8 @@ print("Configuration of your test-node seems to be successfully done.")
 
 browser.save_screenshot('06_finished.png')
 browser.close()
+
+browser.quit()
+display.stop()
 
 exit()
