@@ -1,0 +1,17 @@
+{
+    "passwd": "123456",
+    "hostname": "testnode",
+    "nickname": "Nick Name",
+    "realname": "Mr. Real Name",
+    "contact": "some@emailaddress.com",
+    "location": "somewhere on planet Earth",
+    "lat": "52.4875104819595",
+    "lon": "13.214267492294312",
+    "sharenet_off": false,
+    "download": "8",
+    "upload": "3",
+    "monitoring_off": false,
+    "radio0": "172.16.6.2",
+    "radio1": "172.16.6.3",
+    "dhcp": "172.16.5.1/27"
+}

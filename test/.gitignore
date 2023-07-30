@@ -1,0 +1,5 @@
+geckodriver*
+.gitignore
+.vscode/
+node_*
+0*
