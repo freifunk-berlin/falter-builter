@@ -213,4 +213,15 @@ function generate_embedded_files {
         echo "05-inject-freifunk-release.sh failed..."
         exit 1
     }
+
+    ../../scripts/06-tdbroker-scripts.sh || {
+        echo "06-tdbroker-scripts.sh"
+        exit 1
+    }
+
+    ../../scripts/07-bbb-vpn-uci-defaults.sh || {
+	echo "07-bbb-vpn-uci-defaults.sh"
+	exit 1
+    }
+
 }
