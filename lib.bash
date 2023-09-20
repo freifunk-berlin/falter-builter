@@ -76,6 +76,7 @@ function fetch_subdirs {
     local URL=$1
     local raw_html
 
+    # XXX wtf is the second grep for?
     raw_html=$(curl -s "$URL" | grep href | grep -v 'snapshots\|releases')
     if [ -z "$raw_html" ]; then
         # write to stderr, to get the prompt printed outside the subshell too

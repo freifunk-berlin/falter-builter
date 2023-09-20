@@ -3,10 +3,13 @@
 # shellcheck disable=SC2155
 # shellcheck disable=SC1091
 
+set -e
+set -x
+
 # use of 'set -o errexit' could abort a whole build if, i.e. the
 # memory of a single 4MB-Device exceeds. This should be used with
 # care.
-set -o errexit
+# set -o errexit
 set -o pipefail
 # we use unset variables in if-conditions, i.e. line 390. Thus not activating
 # set -o nounset
@@ -14,12 +17,16 @@ set -o pipefail
 REALPATH_SCRIPT=$(realpath "$0")
 export BUILTER_DIR=$(dirname "$REALPATH_SCRIPT")
 
-RELEASE_LINK_BASE="https://downloads.openwrt.org/releases/"
+#export OPENWRT_MIRROR="https://downloads.openwrt.org"
+export OPENWRT_MIRROR="http://192.168.1.1/downloads.openwrt.org"
+
+RELEASE_LINK_BASE="$OPENWRT_MIRROR/releases/"
 
 # General variables
 FALTER_REPO_BASE="src/gz openwrt_falter https://firmware.berlin.freifunk.net/feed"
 FREIFUNK_RELEASE=""
-export OPENWRT_TOH="https://firmware.berlin.freifunk.net/openwrt-table-of-hardware.csv"
+#export OPENWRT_TOH="https://firmware.berlin.freifunk.net/openwrt-table-of-hardware.csv"
+export OPENWRT_TOH="http://192.168.1.1/firmware.berlin.freifunk.net/openwrt-table-of-hardware.csv"
 
 # list of packages, that get omitted on 8 MiB devices
 export OMIT_LIST_8MiB="
@@ -290,10 +297,14 @@ function start_build {
 
     REPO="$FALTER_REPO_BASE/$FEED_VERSION/packages/$INSTR_SET/falter"
     echo "injecting repo line: $REPO"
-    echo "$REPO" >>repositories.conf
+    # echo "$REPO" >>repositories.conf
+    echo "src falter file:///home/user/w/ff/falter-packages/out/master/$INSTR_SET/falter" >>repositories.conf
+    sed -i 's/option check_signature//g' repositories.conf
+    sed -i 's|https://downloads.openwrt.org/|http://192.168.1.1/downloads.openwrt.org/|g' repositories.conf
 
     # the hexadecimal number represents the fringerprint of the key. Refer to third section of https://openwrt.org/docs/guide-user/security/keygen#generate_usign_key_pair
-    local URL="https://firmware.berlin.freifunk.net/feed/packagefeed_master.pub"
+    # local URL="https://firmware.berlin.freifunk.net/feed/packagefeed_master.pub"
+    local URL="http://192.168.1.1/firmware.berlin.freifunk.net/feed/packagefeed_master.pub"
     local FINGERPRINT="61a078a38408e710"
     echo "loading package-feed key from $URL..."
     mkdir -p keys
@@ -382,25 +393,29 @@ build_router_db
 # if openwrt_base is "master": change to "snapshots". That is the correct
 # directory for downloading openwrt-master
 if [ "$FREIFUNK_OPENWRT_BASE" == "master" ] || [ "$FREIFUNK_OPENWRT_BASE" == "snapshot" ] ; then
-    RELEASE_LINK_BASE="https://downloads.openwrt.org/"
+    RELEASE_LINK_BASE="$OPENWRT_MIRROR/"
     FREIFUNK_OPENWRT_BASE="snapshots"
 fi
 
-if [ -z "$PARSER_TARGET" ] && [ -z "$IMAGE_BUILDER_PATH" ]; then
-    # build one release for all targets
-    RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
-    for target in $(fetch_subdirs "$RELEASE_LINK"); do
-        for subtarget in $(fetch_subdirs "$RELEASE_LINK$target"); do
-            imagebuilder=$(fetch_subdirs "$RELEASE_LINK$PARSER_PROFILE$target$subtarget" | grep imagebuilder)
-            start_build "$RELEASE_LINK$target$subtarget$imagebuilder"
-        done
-    done
-else
+# We require PARSER_TARGET (-t) nowadays, so it's never empty,
+# and custom IMAGE_BUILDER_PATH is something we should consider removing.
+#
+# if [ -z "$PARSER_TARGET" ] && [ -z "$IMAGE_BUILDER_PATH" ]; then
+#     # build one release for all targets
+#     RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
+#     for target in $(fetch_subdirs "$RELEASE_LINK"); do
+#         for subtarget in $(fetch_subdirs "$RELEASE_LINK$target"); do
+#             imagebuilder=$(fetch_subdirs "$RELEASE_LINK$PARSER_PROFILE$target$subtarget" | grep imagebuilder)
+#             start_build "$RELEASE_LINK$target$subtarget$imagebuilder"
+#         done
+#     done
+# else
     # there was given a release and a target
     RELEASE_LINK="$RELEASE_LINK_BASE""$FREIFUNK_OPENWRT_BASE""/targets/"
     # build directly that target. if requested, for all image types.
     TARGET_LIST="$RELEASE_LINK$PARSER_TARGET/"
-    IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
+    IMAGEBUILDER=$(wget -q -O - "$TARGET_LIST/sha256sums" | cut -d'*' -f2 | grep -i imagebuilder)
+    # IMAGEBUILDER=$(fetch_subdirs "$TARGET_LIST" | grep imagebuilder)
     if [ "$PSET_PATHS" ]; then
         for PKG_SET in $PSET_PATHS; do
             echo "-> building three packagelists..."
@@ -412,4 +427,4 @@ else
         # "targets" is on purpose there. Otherwise that positonal argument would be empty.
         start_build "$TARGET_LIST$IMAGEBUILDER" targets "$PARSER_PROFILE"
     fi
-fi
+# fi
