@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
+# mypy: disable-error-code="attr-defined"
+
 import argparse
 import json
-import sys
 from argparse import RawTextHelpFormatter
-from io import SEEK_CUR
 from time import sleep
 
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import Select
 
-## config ##
 luci_webaddress = "http://192.168.42.1"
 luci_timeout_long = 12
 luci_timeout = 2
@@ -126,7 +125,9 @@ mandatory = ["passwd", "hostname", "radio0", "dhcp"]
 for param in mandatory:
     if not opt.get(param) and not configs.get(param):
         print(
-            "Didn't get enough information for configuring your freifunk-node.\nI need at least:\n\t* passwd\n\t* hostname\n\t* mesh-ip-radio0\n\t* ip-dhcp\n\nThe rest, I'll fill with standard-values."
+            "Didn't get enough information for configuring your freifunk-node.\n \
+            I need at least:\n\t* passwd\n\t* hostname\n\t* mesh-ip-radio0\n\t* ip-dhcp\n\n \
+            The rest, I'll fill with standard-values."
         )
         exit(1)
 
@@ -144,8 +145,10 @@ def click_next(browser):
 display = Display(visible=0, size=(1280, 720))
 display.start()
 
+profile = FirefoxProfile()
+profile.set_preference("intl.accept_languages", "de-DE")
 opt = Options()
-opt.set_preference("intl.accept_languages", "de-DE")
+opt.profile = profile
 
 browser = webdriver.Firefox(options=opt)
 browser.implicitly_wait(1)
@@ -164,13 +167,15 @@ while "LuCI" not in browser.title:
         exit(1)
 
 # password field appears slightly late
-pw_0, pw_1 = None, None
+pw_0 = browser.find_element(by=By.NAME, value="cbid.ffwizward.1.pw1")
+pw_1 = browser.find_element(by=By.NAME, value="cbid.ffwizward.1.pw2")
 while not pw_0:
     try:
+        sleep(luci_timeout)
         pw_0 = browser.find_element(by=By.NAME, value="cbid.ffwizward.1.pw1")
         pw_1 = browser.find_element(by=By.NAME, value="cbid.ffwizward.1.pw2")
-    except:
-        sleep(luci_timeout)
+    except Exception:
+        continue
 
 
 pw_0.send_keys(configs.get("passwd"))
@@ -223,7 +228,7 @@ if configs.get("sharenet_off"):
         browser.find_element(
             by=By.LINK_TEXT, value="Am Freifunk-Netz teilnehmen"
         ).click()
-    except:
+    except Exception:
         browser.find_element(
             by=By.LINK_TEXT, value="Participate in the Freifunk-Network"
         ).click()
@@ -235,7 +240,7 @@ else:
         elem = browser.find_element(
             by=By.LINK_TEXT, value="Am Freifunk-Netz teilnehmen und Internet teilen"
         ).click()
-    except:
+    except Exception:
         elem = browser.find_element(
             by=By.LINK_TEXT,
             value="Participate in the Freifunk-Network and share Internet",
@@ -271,7 +276,7 @@ radio0.send_keys(configs.get("radio0"))
 try:
     radio1 = browser.find_element(by=By.NAME, value="cbid.ffwizard.1.meship_radio1")
     radio1.send_keys(configs.get("radio1"))
-except:
+except Exception:
     print("There was no radio1 in LuCI-Wizard. Therefore radio1-IP-Adress not set.")
 
 dhcp.send_keys(configs.get("dhcp"))
