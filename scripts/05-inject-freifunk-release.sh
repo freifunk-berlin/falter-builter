@@ -11,4 +11,5 @@ mkdir -p "$dir" || exit 42
   echo "FREIFUNK_RELEASE='$1'"
   echo "FREIFUNK_OPENWRT_BASE='$2'"
   echo "FREIFUNK_REVISION=''"
+  echo "FREIFUNK_VARIANT='$3'"
 } > "$dir/freifunk_release"
