@@ -217,6 +217,8 @@ function start_build {
     local PKG_SET=$(echo "$TMP" | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
     local DEVICE=$3
 
+    export FREIFUNK_VARIANT="$PKG_SET"
+
     FILENAME=$(basename "$IMAGE_BUILDER_URL")
     FOLDERNAME=$(basename "$FILENAME" .tar.xz)
     BRANCH=$(derive_branch_from_url "$IMAGE_BUILDER_URL")
