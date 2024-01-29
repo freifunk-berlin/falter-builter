@@ -273,21 +273,7 @@ function start_build {
         exit 5
     fi
 
-    # Target is in different position in the URL, depending on the OpenWrt version.
-    case $BRANCH in
-    snapshot)
-        ispos=7
-        ;;
-    *)
-        ispos=8
-        ;;
-    esac
-    # when using custom imagebuilder, the target is on 8th position everytime.
-    if [ -n "$IMAGE_BUILDER_PATH" ]; then
-        ispos=8
-    fi
-
-    INSTR_SET=$(grep "openwrt_base" repositories.conf | awk -F'/' "{print \$$ispos}")
+    INSTR_SET=$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')
     echo "selected instruction set: $INSTR_SET"
 
     REPO="$FALTER_REPO_BASE/$FEED_VERSION/packages/$INSTR_SET/falter"
