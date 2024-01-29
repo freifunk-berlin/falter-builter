@@ -398,6 +398,6 @@ else
     else
         echo "-> building one packagelist only..."
         # "targets" is on purpose there. Otherwise that positonal argument would be empty.
-        start_build "$TARGET_LIST$IMAGEBUILDER" targets "$PARSER_PROFILE"
+        start_build "$TARGET_LIST$IMAGEBUILDER" "$PARSER_PACKAGESET" "$PARSER_PROFILE"
     fi
 fi
