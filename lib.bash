@@ -209,7 +209,7 @@ function generate_embedded_files {
         exit 1
     }
 
-    ../../scripts/05-inject-freifunk-release.sh "$FREIFUNK_RELEASE" "$FREIFUNK_OPENWRT_BASE" || {
+    ../../scripts/05-inject-freifunk-release.sh "$FREIFUNK_RELEASE" "$FREIFUNK_OPENWRT_BASE" "$FREIFUNK_VARIANT" || {
         echo "05-inject-freifunk-release.sh failed..."
         exit 1
     }
