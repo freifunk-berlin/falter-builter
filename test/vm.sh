@@ -70,16 +70,6 @@ EOF
 cat << EOF > "$vmdir/entrypoint.sh"
 #!/bin/sh
 
-apk add bash openssh-client git vim mtr curl wget tcpdump
-
-echo https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
-apk add iproute2 bridge-utils dhclient firecracker socat
-
-apk add python3 dbus-x11 ttf-freefont firefox-esr xvfb
-python3 -m ensurepip
-pip3 install selenium pyvirtualdisplay
-ln -s /usr/bin/firefox-esr /usr/bin/firefox
-
 ip tuntap add dev vmeth0 mode tap
 ip link set up vmeth0
 ip addr add 192.168.42.102/24 dev vmeth0
@@ -110,7 +100,21 @@ done
 EOF
 chmod +x "$vmdir/entrypoint.sh"
 
-podman run -it --rm --name="$host" -v "$vmdir:/vmdir:Z" --user=root --userns=keep-id --device=/dev/kvm --device=/dev/net/tun --security-opt="label=disable" --cap-add=NET_ADMIN --cap-add=NET_RAW --network=slirp4netns:mtu=1500 -p 8022:22 -p 8080:80 -p 8443:443 docker.io/library/alpine:3.18 /vmdir/entrypoint.sh
+podman build -t localhost/falter-testing -f - << EOF
+FROM alpine:edge
+
+RUN echo https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
+RUN apk upgrade musl
+RUN apk add bash openssh-client git vim mtr curl wget tcpdump iproute2 bridge-utils dhclient firecracker socat
+
+RUN apk add python3 py3-pip ca-certificates py3-openssl openssl-dev
+RUN pip3 install --break-system-packages selenium pyvirtualdisplay
+
+RUN apk add firefox-esr xvfb dbus-x11 ttf-freefont
+RUN ln -s /usr/bin/firefox-esr /usr/bin/firefox
+EOF
+
+podman run -it --rm --name="$host" -v "$vmdir:/vmdir:Z" --user=root --userns=keep-id --device=/dev/kvm --device=/dev/net/tun --security-opt="label=disable" --cap-add=NET_ADMIN --cap-add=NET_RAW --network=slirp4netns:mtu=1500 -p 8022:22 -p 8080:80 -p 8443:443 localhost/falter-testing /vmdir/entrypoint.sh
 
 # podman run -t --rm --name="$host" -v "$vmdir:/vmdir:Z" --user=root --userns=keep-id --device=/dev/kvm --device=/dev/net/tun --security-opt="label=disable" --cap-add=NET_ADMIN --cap-add=NET_RAW --network=pasta:-a,10.0.2.0,-n,24,-g,10.0.2.2,--dns-forward,10.0.2.3,-m,1500 docker.io/library/alpine:3.18 /vmdir/entrypoint.sh
 
