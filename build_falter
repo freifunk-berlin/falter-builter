@@ -367,9 +367,9 @@ printf "\tdone.\n"
 # get OpenWrt ToH
 build_router_db
 
-# if openwrt_base is "master": change to "snapshots". That is the correct
-# directory for downloading openwrt-master
-if [ "$FREIFUNK_OPENWRT_BASE" == "master" ] || [ "$FREIFUNK_OPENWRT_BASE" == "snapshot" ] ; then
+# if openwrt_base is "main": change to "snapshots". That is the correct
+# directory for downloading openwrt main
+if [ "$FREIFUNK_OPENWRT_BASE" == "main" ] || [ "$FREIFUNK_OPENWRT_BASE" == "snapshot" ] ; then
     RELEASE_LINK_BASE="https://downloads.openwrt.org/"
     FREIFUNK_OPENWRT_BASE="snapshots"
 fi
