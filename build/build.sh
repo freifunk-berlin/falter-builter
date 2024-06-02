@@ -216,6 +216,11 @@ EOF
             packages=" kmod-ath10k ath10k-firmware-qca988x -kmod-ath10k-ct -ath10k-firmware-qca988x-ct $packages"
         fi
 
+        # broken kernel module (6/2024)
+        if [ "x$target" = "xx86/64" ]; then
+            packages=" -kmod-dwmac-intel $packages"
+        fi
+
         # build images for this device
         make image PROFILE="$p" PACKAGES="$packages" FILES=embedded-files EXTRA_IMAGE_NAME="freifunk-falter-$fversion"
 
