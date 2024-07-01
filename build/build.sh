@@ -103,6 +103,7 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
 
     # let's get to work
     cd "$ibdir"
+    mkdir -p "bin/targets/$target/faillogs"
 
     # falter feed for imagebuilder
     arch="$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')"
@@ -191,41 +192,50 @@ EOF
             continue
         fi
 
-        # customize image based on device quirks (see below)
-        packages="$packageset"
-        info="$(echo "SELECT flashmb, rammb FROM toh WHERE firmwareopenwrtinstallurl LIKE '%$profile%' LIMIT 1" | sqlite3 -batch "$rootdir/tmp/toh.db")"
+        # subshell because we save the device build log if it fails
+        (
+            # customize image based on device quirks (see below)
+            packages="$packageset"
+            info="$(echo "SELECT flashmb, rammb FROM toh WHERE firmwareopenwrtinstallurl LIKE '%$profile%' LIMIT 1" | sqlite3 -batch "$rootdir/tmp/toh.db")"
 
-        # devices with <= 8 MB disk space
-        flashmb="$(echo "$info" | cut -d'|' -f 1)"
-        if [ -n "$flashmb" ] && [ "$flashmb" -le 8 ] || [ "x$p" = "xubnt_unifiac-mesh" ]; then
-            packages="-mtr -iperf3 -tmux -vnstat -falter-berlin-service-registrar -luci-app-falter-service-registrar -luci-i18n-falter-service-registrar-de $packages"
+            # devices with <= 8 MB disk space
+            flashmb="$(echo "$info" | cut -d'|' -f 1)"
+            if [ -n "$flashmb" ] && [ "$flashmb" -le 8 ] || [ "x$p" = "xubnt_unifiac-mesh" ]; then
+                packages="-mtr -iperf3 -tmux -vnstat -falter-berlin-service-registrar -luci-app-falter-service-registrar -luci-i18n-falter-service-registrar-de $packages"
+            fi
+
+            # devices with <= 32 MB RAM
+            rammb="$(echo "$info" | cut -d'|' -f 2)"
+            if [ -n "$rammb" ] && [ "$rammb" -le 32 ]; then
+                packages="zram-swap $packages"
+            fi
+
+            # qualcomm wave1 devices shouldn't use the CT/CandelaTech wifi driver
+            devpkgs="$(make info | grep "$profile:" -A 2 | tail -n1 | cut -d':' -f2)"
+            if [[ "$devpkgs" =~ ath10k-firmware-qca9887 ]]; then
+                packages="kmod-ath10k ath10k-firmware-qca9887 -kmod-ath10k-ct -ath10k-firmware-qca9887-ct $packages"
+            fi
+            if [[ "$devpkgs" =~ ath10k-firmware-qca988x ]]; then
+                packages=" kmod-ath10k ath10k-firmware-qca988x -kmod-ath10k-ct -ath10k-firmware-qca988x-ct $packages"
+            fi
+
+            # broken kernel module (6/2024)
+            if [ "x$target" = "xx86/64" ]; then
+                packages=" -kmod-dwmac-intel $packages"
+            fi
+
+            # build images for this device
+            make image PROFILE="$p" PACKAGES="$packages" FILES=embedded-files EXTRA_IMAGE_NAME="freifunk-falter-$fversion" || true
+        ) \
+            |& tee "bin/targets/$target/faillogs/$p.log" >&2
+
+        # if build resulted in image files, we can delete the log
+        if ls "bin/targets/$target/"*"$p"* >/dev/null ; then
+            rm -v "bin/targets/$target/faillogs/$p.log"
         fi
-
-        # devices with <= 32 MB RAM
-        rammb="$(echo "$info" | cut -d'|' -f 2)"
-        if [ -n "$rammb" ] && [ "$rammb" -le 32 ]; then
-            packages="zram-swap $packages"
-        fi
-
-        # qualcomm wave1 devices shouldn't use the CT/CandelaTech wifi driver
-        devpkgs="$(make info | grep "$profile:" -A 2 | tail -n1 | cut -d':' -f2)"
-        if [[ "$devpkgs" =~ ath10k-firmware-qca9887 ]]; then
-            packages="kmod-ath10k ath10k-firmware-qca9887 -kmod-ath10k-ct -ath10k-firmware-qca9887-ct $packages"
-        fi
-        if [[ "$devpkgs" =~ ath10k-firmware-qca988x ]]; then
-            packages=" kmod-ath10k ath10k-firmware-qca988x -kmod-ath10k-ct -ath10k-firmware-qca988x-ct $packages"
-        fi
-
-        # broken kernel module (6/2024)
-        if [ "x$target" = "xx86/64" ]; then
-            packages=" -kmod-dwmac-intel $packages"
-        fi
-
-        # build images for this device
-        make image PROFILE="$p" PACKAGES="$packages" FILES=embedded-files EXTRA_IMAGE_NAME="freifunk-falter-$fversion"
-
     done
-) |& tee "$destdir/build.log" >&2
+) \
+    |& tee "$destdir/build.log" >&2
 
 mv "$ibdir/bin/targets/$target"/* "$destdir/"
 
