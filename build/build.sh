@@ -4,8 +4,9 @@
 
 function usage() {
     local v="$1"
+    local t="$2"
 
-    echo "usage: build/build.sh <version> <target> [<destination>]"
+    echo "usage: build/build.sh <version> <target> <profile> [<destination>]"
     echo
     echo "versions and release branches:"
     echo "  snapshot => snapshot"
@@ -17,22 +18,32 @@ function usage() {
     echo
     echo "target names:"
     if [ -n "$v" ]; then
-        for t in $(cat "build/targets-$v.txt" | grep -v '#' | grep . | cut -d' ' -f2- | xargs -n1 echo | sort); do
-            echo -n "  $t"
+        for vt in $(cat "$rootdir/build/targets-$v.txt" | grep -v '#' | grep . | cut -d' ' -f2- | xargs -n1 echo | sort); do
+            echo -n "  $vt"
         done
         echo
     else
-        echo "  run ./build.sh with a version to see available target names"
+        echo "  run build/build.sh with a version to see available target names"
+    fi
+    echo
+    echo "profile names:"
+    if [ -n "$t" ]; then
+        echo -n "  all"
+        (
+            cd "$rootdir/tmp/$orelease/$target"
+            list=$(make info |& sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p')
+            for p in $list ; do
+                echo -n "  $p"
+            done
+            echo
+        )
+    else
+        echo "  run build/build.sh with a version and target name to see available device profiles"
     fi
     echo
     echo "destination:"
-    echo "  path to a writable directory where the 'falter' feed directory will end up."
+    echo "  path to a writable directory where image files will end up."
     echo "  default: ./out"
-    echo
-    echo "FALTER_PROFILE env variable:"
-    echo "  sets a specific device profile to be built."
-    echo "  default: all devices"
-    echo "  example: avm_fritzbox-4040"
     echo
     echo "FALTER_VARIANT env variable:"
     echo "  chooses the packageset variant. (deprecated)"
@@ -46,6 +57,8 @@ function usage() {
     exit 1
 }
 
+rootdir=$(pwd)
+
 [ -n "$1" ] && fversion="$1" || usage >&2
 
 # map falter's versioning to openwrt's release branches
@@ -57,10 +70,8 @@ frelease="snapshot"
 [[ "$fversion" =~ ^testbuildbot ]] && orelease="snapshot" && frelease="testbuildbot"
 
 [ -n "$2" ] && target="$2" || usage "$frelease" >&2
-[ -n "$3" ] && dest="$3" || dest="./out"
+[ -n "$4" ] && dest="$4" || dest="./out"
 
-profile=""
-[ -z "$FALTER_PROFILE" ] || profile="$FALTER_PROFILE"
 variant="tunneldigger"
 [ -z "$FALTER_VARIANT" ] || variant="$FALTER_VARIANT"
 feed=""
@@ -82,7 +93,6 @@ fkeyfp="61a078a38408e710"
 destdir="$dest/$fversion/$variant/$target"
 mkdir -p "$destdir"
 ibdir="./tmp/$orelease/$target"
-rootdir=$(pwd)
 
 wget -N -P ./tmp/dl "$fmirror/openwrt-table-of-hardware.csv"
 echo -e '.separator "\t"\n.import tmp/dl/openwrt-table-of-hardware.csv toh' | sqlite3 tmp/toh.db
@@ -104,6 +114,9 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
     # let's get to work
     cd "$ibdir"
     mkdir -p "bin/targets/$target/faillogs"
+
+    # device profile help text, late because we need the extracted imagebuilder for that
+    [ -n "$3" ] && profile="$3" || (set +x ; usage "$frelease" "$target")
 
     # falter feed for imagebuilder
     arch="$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')"
@@ -186,8 +199,8 @@ EOF
     echo
     for p in $profilelist; do
 
-        # skip if FALTER_PROFILE was set and it's not this device
-        if [ -n "$profile" ] && [ "$profile" != "$p" ]; then
+        # skip if device profile was set and it's not this device
+        if [ "x$profile" != "xall" ] && [ "x$profile" != "x$p" ]; then
             continue
         fi
 
@@ -195,7 +208,7 @@ EOF
         (
             # customize image based on device quirks (see below)
             packages="$packageset"
-            info="$(echo "SELECT flashmb, rammb FROM toh WHERE firmwareopenwrtinstallurl LIKE '%$profile%' LIMIT 1" | sqlite3 -batch "$rootdir/tmp/toh.db")"
+            info="$(echo "SELECT flashmb, rammb FROM toh WHERE firmwareopenwrtinstallurl LIKE '%$p%' LIMIT 1" | sqlite3 -batch "$rootdir/tmp/toh.db")"
 
             # devices with <= 8 MB disk space
             flashmb="$(echo "$info" | cut -d'|' -f 1)"
@@ -210,7 +223,7 @@ EOF
             fi
 
             # qualcomm wave1 devices shouldn't use the CT/CandelaTech wifi driver
-            devpkgs="$(make info | grep "$profile:" -A 2 | tail -n1 | cut -d':' -f2)"
+            devpkgs="$(make info | grep "$p:" -A 2 | tail -n1 | cut -d':' -f2)"
             if [[ "$devpkgs" =~ ath10k-firmware-qca9887 ]]; then
                 packages="kmod-ath10k ath10k-firmware-qca9887 -kmod-ath10k-ct -ath10k-firmware-qca9887-ct $packages"
             fi
