@@ -51,10 +51,16 @@ function usage() {
 # map falter's versioning to openwrt's release branches
 orelease="snapshot"
 frelease="snapshot"
-[[ "$fversion" =~ ^1\.4\. ]] && orelease="23.05-SNAPSHOT" && frelease="1.4.0-snapshot"
-[[ "$fversion" =~ ^1\.3\. ]] && orelease="22.03-SNAPSHOT" && frelease="1.3.0-snapshot"
-[[ "$fversion" =~ ^1\.2\.3 ]] && orelease="21.02-SNAPSHOT" && frelease="1.2.3-snapshot"
-[[ "$fversion" =~ ^testbuildbot ]] && orelease="snapshot" && frelease="testbuildbot"
+matched=0
+[[ "$fversion" =~ ^1\.4\.x ]] && matched=1 && orelease="23.05-SNAPSHOT" && frelease="1.4.0-snapshot"
+[[ "$fversion" =~ ^1\.3\.x ]] && matched=1 && orelease="22.03-SNAPSHOT" && frelease="1.3.0-snapshot"
+[[ "$fversion" =~ ^1\.2\.3 ]] && matched=1 && orelease="21.02" && frelease="1.2.3-snapshot"
+[[ "$fversion" =~ ^testbuildbot ]] && matched=1 && orelease="snapshot" && frelease="testbuildbot"
+
+if [ $matched = 0 ]; then
+    echo "$fversion is not a valid release. Please give a proper version number."
+    exit 1
+fi
 
 [ -n "$2" ] && target="$2" || usage "$frelease" >&2
 [ -n "$3" ] && dest="$3" || dest="./out"
@@ -68,7 +74,7 @@ feed=""
 
 set -o pipefail
 set -e
-set -x
+[ -n "$DEBUG" ] && set -x
 
 frevision=$(git rev-parse --short HEAD)
 
