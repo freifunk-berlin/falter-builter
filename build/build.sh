@@ -132,7 +132,6 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
     {
         echo "FREIFUNK_DISTRIB_ID='Freifunk Falter'"
         echo "FREIFUNK_RELEASE='$fversion'"
-        echo "FREIFUNK_OPENWRT_BASE='$orelease'"
         echo "FREIFUNK_REVISION='$frevision'"
         echo "FREIFUNK_VARIANT='$variant'"
     } >embedded-files/etc/freifunk_release
