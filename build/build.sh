@@ -32,7 +32,7 @@ function usage() {
         (
             cd "$rootdir/tmp/$orelease/$target"
             list=$(make info |& sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p')
-            for p in $list ; do
+            for p in $list; do
                 echo -n "  $p"
             done
             echo
@@ -116,7 +116,10 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
     mkdir -p "bin/targets/$target/faillogs"
 
     # device profile help text, late because we need the extracted imagebuilder for that
-    [ -n "$3" ] && profile="$3" || (set +x ; usage "$frelease" "$target")
+    [ -n "$3" ] && profile="$3" || (
+        set +x
+        usage "$frelease" "$target"
+    )
 
     # falter feed for imagebuilder
     arch="$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')"
@@ -242,7 +245,7 @@ EOF
             |& tee "bin/targets/$target/faillogs/$p.log" >&2
 
         # if build resulted in image files, we can delete the log
-        if ls "bin/targets/$target/"*"$p"* >/dev/null ; then
+        if ls "bin/targets/$target/"*"$p"* >/dev/null; then
             rm -v "bin/targets/$target/faillogs/$p.log"
         fi
     done
