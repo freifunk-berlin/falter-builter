@@ -92,6 +92,8 @@ fkeyfp="61a078a38408e710"
 
 destdir="$dest/$fversion/$variant/$target"
 mkdir -p "$destdir"
+rm -rf "$destdir/faillogs"
+
 ibdir="./tmp/$orelease/$target"
 
 wget -N -P ./tmp/dl "$fmirror/openwrt-table-of-hardware.csv"
