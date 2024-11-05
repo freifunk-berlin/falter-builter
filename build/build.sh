@@ -249,13 +249,15 @@ EOF
             |& tee "bin/targets/$target/faillogs/$p.log" >&2
 
         # if build resulted in image files, we can delete the log
-        if ls "bin/targets/$target/"*"$p"* >/dev/null; then
+        cnt="$(find "bin/targets/$target" -name '*.bin' -or -name '*.img' | wc -l)"
+        if [ "$cnt" -gt 0 ] ; then
             rm -v "bin/targets/$target/faillogs/$p.log"
         fi
     done
 ) \
     |& tee "$destdir/build.log" >&2
 
-mv "$ibdir/bin/targets/$target"/* "$destdir/"
+
+find "$ibdir/bin/targets/$target" \( -name '*.bin' -or -name '*.img' -or -name 'profiles.json' -or -name 'faillogs' \) -exec cp -avx '{}' "$destdir/" \;
 
 echo "Done."
