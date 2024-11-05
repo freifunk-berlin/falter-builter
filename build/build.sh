@@ -10,6 +10,7 @@ function usage() {
     echo
     echo "versions and release branches:"
     echo "  snapshot => snapshot"
+    echo "  1.5.x => 1.5.0-snapshot"
     echo "  1.4.x => 1.4.0-snapshot"
     echo "  1.3.x => 1.3.0-snapshot"
     echo "  1.2.x => 1.2.3-snapshot"
@@ -64,6 +65,7 @@ rootdir=$(pwd)
 # map falter's versioning to openwrt's release branches
 orelease="snapshot"
 frelease="snapshot"
+[[ "$fversion" =~ ^1\.5\. ]] && orelease="24.10-SNAPSHOT" && frelease="1.5.0-snapshot"
 [[ "$fversion" =~ ^1\.4\. ]] && orelease="23.05-SNAPSHOT" && frelease="1.4.0-snapshot"
 [[ "$fversion" =~ ^1\.3\. ]] && orelease="22.03-SNAPSHOT" && frelease="1.3.0-snapshot"
 [[ "$fversion" =~ ^1\.2\.3 ]] && orelease="21.02-SNAPSHOT" && frelease="1.2.3-snapshot"
