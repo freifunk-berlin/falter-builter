@@ -250,13 +250,12 @@ EOF
 
         # if build resulted in image files, we can delete the log
         cnt="$(find "bin/targets/$target" -name '*.bin' -or -name '*.img' -or -name '*.gz' | wc -l)"
-        if [ "$cnt" -gt 0 ] ; then
+        if [ "$cnt" -gt 0 ]; then
             rm -v "bin/targets/$target/faillogs/$p.log"
         fi
     done
 ) \
     |& tee "$destdir/build.log" >&2
-
 
 find "$ibdir/bin/targets/$target" \( -name '*.bin' -or -name '*.img' -or -name '*.gz' -or -name 'profiles.json' \) -exec mv -v '{}' "$destdir/" \;
 mv "$ibdir/bin/targets/$target/faillogs" "$destdir/"
