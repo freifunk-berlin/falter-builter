@@ -258,6 +258,7 @@ EOF
     |& tee "$destdir/build.log" >&2
 
 
-find "$ibdir/bin/targets/$target" \( -name '*.bin' -or -name '*.img' -or -name '*.gz' -or -name 'profiles.json' -or -name 'faillogs' \) -exec cp -avx '{}' "$destdir/" \;
+find "$ibdir/bin/targets/$target" \( -name '*.bin' -or -name '*.img' -or -name '*.gz' -or -name 'profiles.json' \) -exec mv -v '{}' "$destdir/" \;
+mv "$ibdir/bin/targets/$target/faillogs" "$destdir/"
 
 echo "Done."
