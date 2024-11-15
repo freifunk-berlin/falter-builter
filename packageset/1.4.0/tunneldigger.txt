@@ -1,5 +1,3 @@
-#-wpad-mini
-#wpad
 
 # Defaults
 falter-berlin-dhcp-defaults
@@ -17,7 +15,6 @@ falter-profiles
 mtr
 ip
 iperf3
-tmux
 vnstat
 ethtool
 #dnsmasq is already provided via dnsmasq-full
@@ -50,7 +47,7 @@ luci-app-falter-owm
 luci-app-falter-owm-ant
 luci-app-falter-owm-cmd
 luci-app-falter-owm-gui
-luci-proto-ppp
+-luci-proto-ppp
 luci-theme-bootstrap
 
 # GUI translation stuff
