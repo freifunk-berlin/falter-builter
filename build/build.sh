@@ -118,6 +118,7 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
     # let's get to work
     cd "$ibdir"
     mkdir -p "bin/targets/$target/faillogs"
+    mkdir -p embedded-files/etc
 
     # device profile help text, late because we need the extracted imagebuilder for that
     [ -n "$3" ] && profile="$3" || (
@@ -127,25 +128,38 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
 
     # falter feed for imagebuilder
     arch="$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')"
-    if [ -n "$feed" ]; then
-        echo "src/gz falter $feed" >>repositories.conf
-        sed -i 's/option check_signature//g' repositories.conf
+    if [ "x$orelease" = "xsnapshot" ] ; then
+        # TODO falter feed available within the running image
+        # TODO disable signature check for custom feed url
+        adburl="$fmirror/feed/$frelease/packages/$arch/falter/packages.adb"
+        echo "$adburl" >> repositories
+        cat <<EOF1 > keys/falter.snapshot.pem
+-----BEGIN PUBLIC KEY-----
+MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEE1NSmLpdMjXJpDQki9ziqW3Ve0aIX99t
+uAc1Yn5TexwhBhHsGxUxICHS63pDXYj9xg1AZHlvbEnFrBNrsdjJQQ==
+-----END PUBLIC KEY-----
+EOF1
     else
-        feedurl="$fmirror/feed/$frelease/packages/$arch/falter"
-        echo "src/gz falter $feedurl" >>repositories.conf
-        {
-            echo "untrusted comment: Falter OPKG Key 2024"
-            echo "$fkey"
-        } >"keys/$fkeyfp"
-    fi
+        if [ -n "$feed" ]; then
+            echo "src/gz falter $feed" >>repositories.conf
+            sed -i 's/option check_signature//g' repositories.conf
+        else
+            feedurl="$fmirror/feed/$frelease/packages/$arch/falter"
+            echo "src/gz falter $feedurl" >>repositories.conf
+            {
+                echo "untrusted comment: Falter OPKG Key 2024"
+                echo "$fkey"
+            } >"keys/$fkeyfp"
+        fi
 
-    # falter feed for the running image
-    mkdir -p embedded-files/etc/opkg/keys
-    if [ -n "$feed" ]; then
-        echo "src/gz falter $feed" >>embedded-files/etc/opkg/customfeeds.conf
-    else
-        echo "src/gz falter $feedurl" >>embedded-files/etc/opkg/customfeeds.conf
-        cp "keys/$fkeyfp" embedded-files/etc/opkg/keys
+        # falter feed for the running image
+        mkdir -p embedded-files/etc/opkg/keys
+        if [ -n "$feed" ]; then
+            echo "src/gz falter $feed" >>embedded-files/etc/opkg/customfeeds.conf
+        else
+            echo "src/gz falter $feedurl" >>embedded-files/etc/opkg/customfeeds.conf
+            cp "keys/$fkeyfp" embedded-files/etc/opkg/keys
+        fi
     fi
 
     # /etc/freifunk_release
