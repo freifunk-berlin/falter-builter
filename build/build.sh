@@ -200,7 +200,7 @@ EOF
     cp "$rootdir/store/favicon.png" "$d/"
 
     # go over all devices and build them
-    profilelist=$(make info | sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p')
+    profilelist=$(make info | sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | grep -v Default)
     echo -n "building profiles:"
     echo "$profilelist" | xargs echo -n "  "
     echo
