@@ -128,12 +128,12 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
 
     # falter feed for imagebuilder
     arch="$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')"
-    if [ "x$orelease" = "xsnapshot" ] ; then
+    if [ "x$orelease" = "xsnapshot" ]; then
         # TODO falter feed available within the running image
         # TODO disable signature check for custom feed url
         adburl="$fmirror/feed/$frelease/packages/$arch/falter/packages.adb"
-        echo "$adburl" >> repositories
-        cat <<EOF1 > keys/falter.snapshot.pem
+        echo "$adburl" >>repositories
+        cat <<EOF1 >keys/falter.snapshot.pem
 -----BEGIN PUBLIC KEY-----
 MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEE1NSmLpdMjXJpDQki9ziqW3Ve0aIX99t
 uAc1Yn5TexwhBhHsGxUxICHS63pDXYj9xg1AZHlvbEnFrBNrsdjJQQ==
