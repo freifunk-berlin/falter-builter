@@ -32,7 +32,7 @@ function usage() {
         echo -n "  all"
         (
             cd "$rootdir/tmp/$orelease/$target"
-            list=$(make info |& sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p')
+            list=$(make info |& sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | grep -v Default || true)
             for p in $list; do
                 echo -n "  $p"
             done
@@ -214,7 +214,7 @@ EOF
     cp "$rootdir/store/favicon.png" "$d/"
 
     # go over all devices and build them
-    profilelist=$(make info | sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | grep -v Default)
+    profilelist=$(make info | sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | grep -v Default || true)
     echo -n "building profiles:"
     echo "$profilelist" | xargs echo -n "  "
     echo
