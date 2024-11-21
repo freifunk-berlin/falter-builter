@@ -53,7 +53,12 @@ function usage() {
     echo "FALTER_FEED env variable:"
     echo "  customizes the falter package feed."
     echo "  default: https://firmware.berlin.freifunk.net/feed/<branch>/packages/<arch>/falter"
-    echo "  example: file:///tmp/falter-packages/out/snapshot/x86/64/falter"
+    echo "  opkg example: file:///tmp/falter-packages/out/main/x86_64/falter"
+    echo "  apk example: file:///tmp/falter-packages/out/main/x86_64/falter/packages.adb"
+    echo
+    echo "FALTER_FEEDKEY env variable:"
+    echo "  specifies an APK signing key for a custom package feed."
+    echo "  apk example: /tmp/falter-packages/out/main/x86_64/public-key.pem"
     echo
     exit 1
 }
@@ -78,6 +83,8 @@ variant="tunneldigger"
 [ -z "$FALTER_VARIANT" ] || variant="$FALTER_VARIANT"
 feed=""
 [ -z "$FALTER_FEED" ] || feed="$FALTER_FEED"
+feedkey=""
+[ -z "$FALTER_FEEDKEY" ] || feedkey="$FALTER_FEEDKEY"
 
 set -o pipefail
 set -e
@@ -126,43 +133,51 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
         usage "$frelease" "$target"
     )
 
-    # falter feed for imagebuilder
+    # falter package feed, APK for snapshot, OPKG for older branches
     arch="$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')"
     if [ "x$orelease" = "xsnapshot" ]; then
-        # TODO falter feed available within the running image
-        # TODO disable signature check for custom feed url
-        adburl="$fmirror/feed/$frelease/packages/$arch/falter/packages.adb"
-        echo "$adburl" >>repositories
+
+        # install falter signing key, regardless of feed choice
+        apkdir="embedded-files/etc/apk"
+        mkdir -p "$apkdir/keys" "$apkdir/repositories.d"
         cat <<EOF1 >keys/falter.snapshot.pem
 -----BEGIN PUBLIC KEY-----
 MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEE1NSmLpdMjXJpDQki9ziqW3Ve0aIX99t
 uAc1Yn5TexwhBhHsGxUxICHS63pDXYj9xg1AZHlvbEnFrBNrsdjJQQ==
 -----END PUBLIC KEY-----
 EOF1
-        apkdir="embedded-files/etc/apk"
-        mkdir -p "$apkdir/keys" "$apkdir/repositories.d"
         cp -av keys/falter.snapshot.pem "$apkdir/keys/"
-        echo "$adburl" >"$apkdir/repositories.d/falter.list"
-    else
+
+        # custom feed vs. official falter feed
         if [ -n "$feed" ]; then
-            echo "src/gz falter $feed" >>repositories.conf
+            echo "$feed" >>repositories
+            echo "$feed" >>"$apkdir/repositories.d/falter.list"
+            cp -av "$feedkey" keys/falter.custom.pem
+            cp -av "$feedkey" "$apkdir/keys/falter.custom.pem"
+        else
+            adburl="$fmirror/feed/$frelease/packages/$arch/falter/packages.adb"
+            echo "$adburl" >>repositories
+            echo "$adburl" >"$apkdir/repositories.d/falter.list"
+        fi
+    else
+        # install falter signing key, regardless of feed choice
+        opkgdir="embedded-files/etc/opkg"
+        mkdir -p "$opkgdir/keys"
+        {
+            echo "untrusted comment: Falter OPKG Key 2024"
+            echo "$fkey"
+        } >"keys/$fkeyfp"
+        cp -av "keys/$fkeyfp" "$opkgdir/keys/"
+
+        # custom feed vs. official falter feed
+        if [ -n "$feed" ]; then
             sed -i 's/option check_signature//g' repositories.conf
+            echo "src/gz falter $feed" >>repositories.conf
+            echo "src/gz falter $feed" >>"$opkgdir/customfeeds.conf"
         else
             feedurl="$fmirror/feed/$frelease/packages/$arch/falter"
             echo "src/gz falter $feedurl" >>repositories.conf
-            {
-                echo "untrusted comment: Falter OPKG Key 2024"
-                echo "$fkey"
-            } >"keys/$fkeyfp"
-        fi
-
-        # falter feed for the running image
-        mkdir -p embedded-files/etc/opkg/keys
-        if [ -n "$feed" ]; then
-            echo "src/gz falter $feed" >>embedded-files/etc/opkg/customfeeds.conf
-        else
-            echo "src/gz falter $feedurl" >>embedded-files/etc/opkg/customfeeds.conf
-            cp "keys/$fkeyfp" embedded-files/etc/opkg/keys
+            echo "src/gz falter $feedurl" >>"$opkgdir/customfeeds.conf"
         fi
     fi
 
