@@ -139,6 +139,10 @@ MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEE1NSmLpdMjXJpDQki9ziqW3Ve0aIX99t
 uAc1Yn5TexwhBhHsGxUxICHS63pDXYj9xg1AZHlvbEnFrBNrsdjJQQ==
 -----END PUBLIC KEY-----
 EOF1
+        apkdir="embedded-files/etc/apk"
+        mkdir -p "$apkdir/keys" "$apkdir/repositories.d"
+        cp -av keys/falter.snapshot.pem "$apkdir/keys/"
+        echo "$adburl" >"$apkdir/repositories.d/falter.list"
     else
         if [ -n "$feed" ]; then
             echo "src/gz falter $feed" >>repositories.conf
