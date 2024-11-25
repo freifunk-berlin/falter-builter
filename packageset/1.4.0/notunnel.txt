@@ -16,11 +16,10 @@ ip
 iperf3
 vnstat
 ethtool
-#dnsmasq is already provided via dnsmasq-full
--dnsmasq
 qos-scripts
 firewall4
 iptables-nft
+ip6tables-nft
 iwinfo
 libiwinfo-lua
 tcpdump-mini
@@ -32,6 +31,14 @@ falter-policyrouting
 falter-profiles
 # allow upgrade from one type to another
 falter-berlin-tunneldigger
+
+# Save disk space
+-luci-proto-ppp
+-kmod-ppp
+-kmod-pppoe
+-kmod-pppox
+-ppp
+-ppp-mod-pppoe
 
 # GUI-basics
 uhttpd
@@ -48,7 +55,6 @@ luci-app-falter-owm
 luci-app-falter-owm-ant
 luci-app-falter-owm-cmd
 luci-app-falter-owm-gui
--luci-proto-ppp
 luci-theme-bootstrap
 
 # GUI translation stuff
