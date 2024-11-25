@@ -251,13 +251,13 @@ EOF
             info="$(echo "SELECT flashmb, rammb FROM toh WHERE firmwareopenwrtinstallurl LIKE '%$p%' OR firmwareopenwrtupgradeurl LIKE '%$p%' OR firmwareopenwrtsnapshotupgradeurl LIKE '%$p%' OR firmwareopenwrtsnapshotupgradeurl LIKE '%$p%' LIMIT 1" | sqlite3 -batch "$rootdir/tmp/toh.db")"
 
             # devices with <= 8 MB disk space
-            flashmb="$(echo "$info" | cut -d'|' -f 1 | grep -E -o '[0-9]+' | head -n1)"
+            flashmb="$(echo "$info" | cut -d'|' -f 1 | sed -E 's/[^0-9]*([0-9]+)[^0-9]*.*/\1/')"
             if [ -n "$flashmb" ] && [ "$flashmb" -le 8 ] || [ "x$p" = "xubnt_unifiac-mesh" ]; then
                 packages="-mtr -iperf3 -tmux -vnstat -falter-berlin-service-registrar -luci-app-falter-service-registrar -luci-i18n-falter-service-registrar-de -luci-app-statistics -luci-i18n-statistics-de -collectd-mod-rrdtool $packages"
             fi
 
             # devices with <= 32 MB RAM
-            rammb="$(echo "$info" | cut -d'|' -f 2 | grep -E -o '[0-9]+' | head -n1)"
+            rammb="$(echo "$info" | cut -d'|' -f 2 | sed -E 's/[^0-9]*([0-9]+)[^0-9]*.*/\1/')"
             if [ -n "$rammb" ] && [ "$rammb" -le 32 ]; then
                 packages="zram-swap $packages"
             fi
