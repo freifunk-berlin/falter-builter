@@ -252,7 +252,7 @@ EOF
 
             # devices with <= 8 MB disk space
             flashmb="$(echo "$info" | cut -d'|' -f 1 | sed -E 's/[^0-9]*([0-9]+)[^0-9]*.*/\1/')"
-            if [ -n "$flashmb" ] && [ "$flashmb" -le 8 ] || [ "x$p" = "xubnt_unifiac-mesh" ]; then
+            if [ -n "$flashmb" ] && [ "$flashmb" -le 8 ] || [ "x$p" = "xubnt_unifiac-mesh" ] || [ "x$p" = "xubnt_unifi-ap" ] || [ "x$p" = "xubnt_unifi-ap-lr" ]; then
                 packages="-mtr -iperf3 -tmux -vnstat -falter-berlin-service-registrar -luci-app-falter-service-registrar -luci-i18n-falter-service-registrar-de -luci-app-statistics -luci-i18n-statistics-de -collectd-mod-rrdtool $packages"
             fi
 
