@@ -253,7 +253,7 @@ EOF
             # devices with <= 8 MB disk space
             flashmb="$(echo "$info" | cut -d'|' -f 1 | grep -E -o '[0-9]+' | head -n1)"
             if [ -n "$flashmb" ] && [ "$flashmb" -le 8 ] || [ "x$p" = "xubnt_unifiac-mesh" ]; then
-                packages="-mtr -iperf3 -tmux -vnstat -falter-berlin-service-registrar -luci-app-falter-service-registrar -luci-i18n-falter-service-registrar-de $packages"
+                packages="-mtr -iperf3 -tmux -vnstat -falter-berlin-service-registrar -luci-app-falter-service-registrar -luci-i18n-falter-service-registrar-de -luci-app-statistics -luci-i18n-statistics-de -collectd-mod-rrdtool $packages"
             fi
 
             # devices with <= 32 MB RAM
