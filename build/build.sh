@@ -265,10 +265,10 @@ EOF
             # qualcomm wave1 devices shouldn't use the CT/CandelaTech wifi driver
             devpkgs="$(make info | grep "$p:" -A 2 | tail -n1 | cut -d':' -f2)"
             if [[ "$devpkgs" =~ ath10k-firmware-qca9887 ]]; then
-                packages="kmod-ath10k ath10k-firmware-qca9887 -kmod-ath10k-ct -ath10k-firmware-qca9887-ct $packages"
+                packages="kmod-ath10k ath10k-firmware-qca9887 -kmod-ath10k-ct -ath10k-firmware-qca9887-ct -kmod-ath10k-ct-smallbuffers $packages"
             fi
             if [[ "$devpkgs" =~ ath10k-firmware-qca988x ]]; then
-                packages=" kmod-ath10k ath10k-firmware-qca988x -kmod-ath10k-ct -ath10k-firmware-qca988x-ct $packages"
+                packages=" kmod-ath10k ath10k-firmware-qca988x -kmod-ath10k-ct -ath10k-firmware-qca988x-ct -kmod-ath10k-ct-smallbuffers $packages"
             fi
 
             # broken kernel module (6/2024)
