@@ -74,6 +74,7 @@ luci-i18n-falter-service-registrar-de
 
 # OLSR
 olsrd
+olsrd-utils
 olsrd-mod-arprefresh
 olsrd-mod-dyn-gw
 olsrd-mod-jsoninfo
