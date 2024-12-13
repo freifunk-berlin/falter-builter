@@ -126,12 +126,15 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
 
 (
     # download and extract imagebuilder tarball
-    # TODO: supper custom imagebuilder url
-    dlurl="$owmirror/releases/$orelease/targets"
-    [ "x$orelease" == "xsnapshot" ] && dlurl="$owmirror/snapshots/targets"
-    ibfile=$(wget -q -O - "$dlurl/$target/sha256sums" | cut -d '*' -f 2 | grep -i openwrt-imagebuilder-)
-    mkdir -p "./tmp/dl/"
-    wget -nv -N -P ./tmp/dl "$dlurl/$target/$ibfile"
+    # TODO: support custom imagebuilder url
+    # dlurl="$owmirror/releases/$orelease/targets"
+    # [ "x$orelease" == "xsnapshot" ] && dlurl="$owmirror/snapshots/targets"
+    # ibfile=$(wget -q -O - "$dlurl/$target/sha256sums" | cut -d '*' -f 2 | grep -i openwrt-imagebuilder-)
+    # mkdir -p "./tmp/dl/"
+    # wget -nv -N -P ./tmp/dl "$dlurl/$target/$ibfile"
+    # XXX for local custom imagebuilder:
+    ibfile="openwrt-imagebuilder-x86-64.Linux-x86_64.tar.xz"
+    cp -a "tmp/imagebuilder/vm-mmio/bin/targets/x86/64/$ibfile" ./tmp/dl
     rm -rf "$ibdir"
     mkdir -p "$ibdir"
     tar -x -C "$ibdir" --strip-components=1 -f "./tmp/dl/$ibfile"
@@ -197,6 +200,16 @@ EOF1
 
         sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories.conf
     fi
+
+    # XXX for local custom imagebuilder, do this instead:
+    echo "src imagebuilder file:packages" > repositories.conf
+    # if [ -n "$feed" ]; then
+    #     echo "src/gz falter $feed" >>repositories.conf
+    # else
+    #     feedurl="$fmirror/feed/$frelease/packages/$arch/falter"
+    #     echo "src/gz falter $feedurl" >>repositories.conf
+    #     echo "option check_signature" >>repositories.conf
+    # fi
 
     # /etc/freifunk_release
     {
