@@ -179,6 +179,6 @@ EOF
 # to run tests in container: cd /vmdir/builter-test ; ./wizard-tester.py node_example.json
 cp -avx "test" "$vmdir/builter-test"
 
-podman run -it --rm --name="$host" -v "$(realpath $vmdir):/vmdir:Z" --user=root --userns=keep-id --device=/dev/kvm --device=/dev/net/tun --security-opt="label=disable" --cap-add=NET_ADMIN --cap-add=NET_RAW --network=slirp4netns:mtu=1280 -p 8022:8022 -p 8053:8053/udp -p 8080:8080 -p 8443:8443 localhost/falter-testing /vmdir/entrypoint.sh
+podman run -it --rm --name="$host" -v "$(realpath $vmdir):/vmdir:Z" --user=root --userns=keep-id --device=/dev/kvm --device=/dev/net/tun --security-opt="label=disable" --cap-add=NET_ADMIN --cap-add=NET_RAW --network=slirp4netns -p 8022:8022 -p 8053:8053/udp -p 8080:8080 -p 8443:8443 localhost/falter-testing /vmdir/entrypoint.sh
 
 echo "Done."
