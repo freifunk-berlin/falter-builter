@@ -253,17 +253,17 @@ EOF
             # devices with <= 8 MB disk space
             smallflash=false
             flashmb="$(echo "$info" | cut -d'|' -f 1 | sed -E 's/[^0-9]*([0-9]+)[^0-9]*.*/\1/')"
-            if [ -n "$flashmb" ] && [ "$flashmb" -le 8 ] ; then
+            if [ -n "$flashmb" ] && [ "$flashmb" -le 8 ]; then
                 smallflash=true
             fi
 
             # table of hardware lists flash chip capacity, not usable image space.
             # some 16 MB devices with A/B partition setup need to be forced to 8 MB.
-            if [[ "$p" =~ ubnt_unifiac|ubnt_unifi-ap|ubnt_usw-flex ]] ; then
+            if [[ "$p" =~ ubnt_unifiac|ubnt_unifi-ap|ubnt_usw-flex ]]; then
                 smallflash=true
             fi
 
-            if $smallflash ; then
+            if $smallflash; then
                 packages="-falter-berlin-service-registrar -luci-app-falter-service-registrar -luci-i18n-falter-service-registrar-de $packages"
                 packages="-luci-app-statistics -luci-i18n-statistics-de -collectd-mod-rrdtool $packages"
                 packages="-tcpdump-mini -mtr -iperf3 -tmux -vnstat $packages"
