@@ -32,7 +32,7 @@ function usage() {
         echo -n "  all"
         (
             cd "$rootdir/tmp/$orelease/$target"
-            list=$(make info |& sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | sort | grep -v Default || true)
+            list=$(make info |& sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | sort || true)
             for p in $list; do
                 echo -n "  $p"
             done
@@ -233,7 +233,7 @@ EOF
     cp "$rootdir/store/favicon.png" "$d/"
 
     # go over all devices and build them
-    profilelist=$(make info | sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | sort | grep -v Default || true)
+    profilelist=$(make info | sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | sort || true)
     echo -n "building profiles:"
     echo "$profilelist" | xargs echo -n "  "
     echo
@@ -295,7 +295,7 @@ EOF
             |& tee "bin/targets/$target/faillogs/$p.log" >&2
 
         # if build resulted in image files, we can delete the log
-        cnt="$(find "bin/targets/$target/" -name "*$p*.bin" -or -name "*$p*.img" -or -name "*$p*.gz" | wc -l)"
+        cnt="$(find "bin/targets/$target/" -iname "*$p*.bin" -or -iname "*$p*.img" -or -iname "*$p*.gz" -or -iname "*$p*.ubi" -or -iname "*Image*" | wc -l)"
         if [ "$cnt" -gt 0 ]; then
             rm -v "bin/targets/$target/faillogs/$p.log"
         fi
@@ -303,7 +303,7 @@ EOF
 ) \
     |& tee "$destdir/build.log" >&2
 
-find "$ibdir/bin/targets/$target" \( -name '*.bin' -or -name '*.img' -or -name '*.gz' -or -name 'profiles.json' \) -exec mv -v '{}' "$destdir/" \;
+find "$ibdir/bin/targets/$target" \( -name '*.bin' -or -name '*.img' -or -name '*.gz' -or -name '*.ubi' -or -name '*Image*' -or -name 'profiles.json' \) -exec mv -v '{}' "$destdir/" \;
 mv "$ibdir/bin/targets/$target/faillogs" "$destdir/"
 
 echo "Done."
