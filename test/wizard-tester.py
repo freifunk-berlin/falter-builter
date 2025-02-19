@@ -268,23 +268,34 @@ click_next(browser)
 
 # set ip-adresses
 sleep(2)
-radio0 = browser.find_element(by=By.NAME, value="cbid.ffwizard.1.meship_radio0")
-dhcp = browser.find_element(by=By.NAME, value="cbid.ffwizard.1.dhcpmesh")
 
-radio0.send_keys(configs.get("radio0"))
+try:
+    radio0 = browser.find_element(by=By.NAME, value="cbid.ffwizard.1.meship_radio0")
+    radio0.send_keys(configs.get("radio0"))
+except Exception:
+    print("There was no radio0 in LuCI-Wizard, Therefore radio0-IP-Address not set.")
+    radio0 = None
+
+#dhcp = browser.find_element(by=By.NAME, value="cbid.ffwizard.1.dhcpmesh")
+
 # radio1 is not present on all routers
 try:
     radio1 = browser.find_element(by=By.NAME, value="cbid.ffwizard.1.meship_radio1")
     radio1.send_keys(configs.get("radio1"))
 except Exception:
     print("There was no radio1 in LuCI-Wizard. Therefore radio1-IP-Adress not set.")
+    radio1 = None
 
+dhcp = browser.find_element(by=By.NAME, value="cbid.ffwizard.1.dhcpmesh")
 dhcp.send_keys(configs.get("dhcp"))
 
 # configure mesh mode ad-hoc
 if args.adhoc:
-    browser.find_element_by_id("cbid.ffwizard.1.mode_radio0-adhoc").click
-
+    if radio0 not None:
+         browser.find_element_by_id("cbid.ffwizard.1.mode_radio0-adhoc").click
+    if radio1 not None:
+         browser.find_element_by_id("cbid.ffwizard.1.mode_radio1-adhoc").click
+ 
 browser.save_screenshot("05_ipaddr.png")
 click_next(browser)
 
