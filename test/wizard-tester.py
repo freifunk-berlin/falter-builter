@@ -14,7 +14,7 @@ from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import Select
 
-luci_webaddress = "http://192.168.42.1"
+luci_webaddress = "https://192.168.42.1"
 luci_timeout_long = 12
 luci_timeout = 2
 
@@ -147,6 +147,7 @@ display.start()
 
 profile = FirefoxProfile()
 profile.set_preference("intl.accept_languages", "de-DE")
+protile.set_preference("accept_untrusted_certs", True)
 opt = Options()
 opt.profile = profile
 
@@ -167,6 +168,7 @@ while "LuCI" not in browser.title:
         exit(1)
 
 # password field appears slightly late
+sleep(2)
 pw_0 = browser.find_element(by=By.NAME, value="cbid.ffwizward.1.pw1")
 pw_1 = browser.find_element(by=By.NAME, value="cbid.ffwizward.1.pw2")
 while not pw_0:
