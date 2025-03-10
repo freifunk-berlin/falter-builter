@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC1000-SC9999
 # SPDX-License-Identifier: GPL-2.0-only
 # ----------------------------------------------------------------------
 # extract-vmlinux - Extract uncompressed vmlinux from a kernel image

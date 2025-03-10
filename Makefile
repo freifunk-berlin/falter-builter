@@ -24,9 +24,9 @@ lint: shellcheck # TODO: gitleaks flake8 pylint
 .PHONY: lint
 
 shfmt:
-	shfmt -ln=bash -l build/build.sh test/vm.sh | xargs shfmt -w -l -ln=bash -i 4 -ci -bn
+	shfmt -ln=bash -l build/*.sh test/*.sh | grep -v extract-vmlinux | xargs shfmt -w -l -ln=bash -i 4 -ci -bn
 .PHONY: shfmt
 
 shellcheck:
-	shellcheck -S warning build/build.sh test/vm.sh
+	shellcheck -S warning build/*.sh test/*.sh
 .PHONY: shellcheck
