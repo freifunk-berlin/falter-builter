@@ -30,6 +30,8 @@ falter-common
 falter-common-olsr
 falter-policyrouting
 falter-profiles
+falter-berlin-tunneldigger
+falter-berlin-ssid-changer
 
 # Save disk space
 -luci-proto-ppp
@@ -65,6 +67,12 @@ luci-i18n-statistics-de
 luci-i18n-falter-de
 luci-i18n-ffwizard-falter-de
 luci-i18n-falter-policyrouting-de
+
+# autoupdate
+falter-berlin-autoupdate
+falter-berlin-autoupdate-keys
+luci-app-falter-autoupdate
+luci-i18n-falter-autoupdate-de
 
 # service registrar
 falter-berlin-service-registrar
