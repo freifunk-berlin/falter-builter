@@ -31,6 +31,7 @@ falter-policyrouting
 falter-profiles
 # allow upgrade from one type to another
 falter-berlin-tunneldigger
+falter-berlin-ssid-changer
 
 # Save disk space
 -luci-proto-ppp
@@ -67,6 +68,12 @@ luci-i18n-falter-de
 luci-i18n-ffwizard-falter-de
 luci-i18n-falter-policyrouting-de
 
+# autoupdate
+falter-berlin-autoupdate
+falter-berlin-autoupdate-keys
+luci-app-falter-autoupdate
+luci-i18n-falter-autoupdate-de
+
 # service registrar
 falter-berlin-service-registrar
 luci-app-falter-service-registrar
@@ -80,7 +87,6 @@ olsrd-mod-dyn-gw
 olsrd-mod-jsoninfo
 olsrd-mod-txtinfo
 olsrd-mod-nameservice
-olsrd-mod-watchdog
 kmod-ipip
 
 # Uplink
