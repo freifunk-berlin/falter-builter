@@ -148,6 +148,10 @@ socat -d -4 TCP-LISTEN:8022,fork,reuseaddr TCP-CONNECT:$gw:22 &
 socat -d -4 UDP-LISTEN:8053,fork,reuseaddr UDP-CONNECT:$gw:53 &
 socat -d -4 TCP-LISTEN:8080,fork,reuseaddr TCP-CONNECT:$gw:80 &
 socat -d -4 TCP-LISTEN:8443,fork,reuseaddr TCP-CONNECT:$gw:443 &
+
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$gw \
+  "uci -q del dhcp.@dnsmasq[0].server ; uci add_list dhcp.@dnsmasq[0].server='10.0.2.3' ; uci commit ; reload_config"
+
 echo "portfwd.sh: available on 127.0.0.1: 8022 (ssh) 8053 (dns) 8080 (http) 8443 (https)"
 EOF
 chmod +x "$vmdir/portfwd.sh"
