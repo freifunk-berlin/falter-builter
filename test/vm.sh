@@ -114,17 +114,7 @@ cat <<'EOF' >"$vmdir/portfwd.sh"
 ifname="$1"
 
 ip addr flush $ifname
-killall dhclient || true
 killall socat || true
-
-# heredoc with variable interpolation
-cat << EOF2 > /etc/dhcp/dhclient.conf
-interface "$ifname" {
-  request subnet-mask, broadcast-address, interface-mtu;
-  initial-interval 1;
-  backoff-cutoff 2;
-}
-EOF2
 
 mkdir -p /run/dhcp
 udhcpc -b -i $ifname
