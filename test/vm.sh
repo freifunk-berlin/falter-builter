@@ -117,7 +117,7 @@ ip addr flush $ifname
 killall socat || true
 
 mkdir -p /run/dhcp
-udhcpc -b -i $ifname
+udhcpc -T 2 -t 60 -q -i $ifname |& xargs -n1 -d"\n" echo "container:"
 
 netmask() {
   local mask=$((0xffffffff << (32 - $1))); shift
@@ -162,7 +162,7 @@ FROM alpine:edge
 
 RUN echo https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
 RUN apk upgrade musl
-RUN apk add bash openssh-client git vim mtr curl wget tcpdump iproute2 bridge-utils firecracker socat jq
+RUN apk add bash openssh-client git vim mtr curl wget tcpdump iproute2 bridge-utils firecracker socat jq findutils
 
 RUN apk add python3 py3-pip ca-certificates py3-openssl openssl-dev
 RUN pip3 install --break-system-packages selenium pyvirtualdisplay
