@@ -92,8 +92,13 @@ set -x
 
 frevision=$(git rev-parse --short HEAD)
 
-owmirror="https://downloads.openwrt.org"
-fmirror="https://firmware.berlin.freifunk.net"
+if [ -z "$FALTER_MIRROR" ] ; then
+  owmirror="https://downloads.openwrt.org"
+  fmirror="https://firmware.berlin.freifunk.net"
+else
+  owmirror="$FALTER_MIRROR/downloads.openwrt.org"
+  fmirror="$FALTER_MIRROR/firmware.berlin.freifunk.net"
+fi
 
 # our opkg signing key (used by buildbot to sign the package feed)
 fkey="RWRhoHijhAjnECRwgLkBfnA2rgHtgVNmDPJmFfIhGDxbK8vIFxkiZ8iF"
@@ -159,6 +164,10 @@ EOF1
             echo "$adburl" >>repositories
             echo "$adburl" >"$apkdir/repositories.d/falter.list"
         fi
+
+        if [ -n "$FALTER_MIRROR" ] ; then
+            sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories
+        fi
     else
         # install falter signing key, regardless of feed choice
         opkgdir="embedded-files/etc/opkg"
@@ -178,6 +187,10 @@ EOF1
             feedurl="$fmirror/feed/$frelease/packages/$arch/falter"
             echo "src/gz falter $feedurl" >>repositories.conf
             echo "src/gz falter $feedurl" >>"$opkgdir/customfeeds.conf"
+        fi
+
+        if [ -n "$FALTER_MIRROR" ] ; then
+            sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories.conf
         fi
     fi
 
