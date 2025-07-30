@@ -168,8 +168,6 @@ EOF1
         if [ -n "$FALTER_MIRROR" ] ; then
             sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories
         fi
-
-        sed -i 's#$(APK) add#echo $(APK) ; $(APK) --version ; $(APK) add#g' Makefile
     else
         # install falter signing key, regardless of feed choice
         opkgdir="embedded-files/etc/opkg"
