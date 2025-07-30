@@ -169,7 +169,7 @@ EOF1
             sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories
         fi
 
-        sed -i 's#$(APK) add#echo $(APK) ; $(APK) --version ; $(APK) add -v -v#g' Makefile
+        sed -i 's#$(APK) add#echo $(APK) ; $(APK) --version ; $(APK) add#g' Makefile
     else
         # install falter signing key, regardless of feed choice
         opkgdir="embedded-files/etc/opkg"
