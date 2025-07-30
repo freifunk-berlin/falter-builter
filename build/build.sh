@@ -307,6 +307,7 @@ EOF
             # XXX apk dl cache debugging
             mkdir -p dl/
             touch dl/*.apk
+            sed -i 's#$(FAKEROOT) #$(FAKEROOT) -b 1024 #g' include/rootfs.mk
 
             # build images for this device
             make image PROFILE="$p" PACKAGES="ca-bundle $packages" FILES=embedded-files EXTRA_IMAGE_NAME="freifunk-falter-$fversion" || true
