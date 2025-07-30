@@ -304,10 +304,6 @@ EOF
                 packages=" -kmod-dwmac-intel $packages"
             fi
 
-            # XXX apk dl cache debugging
-            mkdir -p dl/
-            touch dl/*.apk
-
             # build images for this device
             make image PROFILE="$p" PACKAGES="$packages" FILES=embedded-files EXTRA_IMAGE_NAME="freifunk-falter-$fversion" || true
         ) \
