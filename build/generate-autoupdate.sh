@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-# Usage: generate-autoupdate.sh <version> <out-dir>
-
 function usage() {
+    echo 'Usage: build/generate-autoupdate.sh <version> [<out-dir>]' >&2
     exit 1
 }
 
@@ -10,7 +9,7 @@ set -e
 set -o pipefail
 # set -x
 
-[ -n "$1" ] && fversion="$1" || usage >&2
+[ -n "$1" ] && fversion="$1" || usage
 [ -n "$2" ] && outdir="$2" || outdir="./out"
 
 (
