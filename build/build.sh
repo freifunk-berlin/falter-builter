@@ -71,8 +71,8 @@ rootdir=$(pwd)
 orelease="snapshot"
 frelease="snapshot"
 [[ "$fversion" =~ ^1\.5\. ]] && orelease="24.10-SNAPSHOT" && frelease="1.5.0-snapshot"
-[[ "$fversion" =~ ^1\.4\. ]] && orelease="23.05-SNAPSHOT" && frelease="1.4.0-snapshot"
-[[ "$fversion" =~ ^1\.3\. ]] && orelease="22.03-SNAPSHOT" && frelease="1.3.0-snapshot"
+[[ "$fversion" =~ ^1\.4\. ]] && orelease="23.05.6" && frelease="1.4.0-snapshot"
+[[ "$fversion" =~ ^1\.3\. ]] && orelease="22.03.7" && frelease="1.3.0-snapshot"
 [[ "$fversion" =~ ^1\.2\. ]] && orelease="21.02.7" && frelease="1.2.3-snapshot"
 [[ "$fversion" =~ ^testbuildbot ]] && orelease="snapshot" && frelease="testbuildbot"
 
