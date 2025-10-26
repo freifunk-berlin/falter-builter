@@ -46,6 +46,10 @@ function usage() {
     echo "  path to a writable directory where image files will end up."
     echo "  default: ./out"
     echo
+    echo "FALTER_MIRROR env variable:"
+    echo "  sets the base URL of a mirror which serves copies of downloads.openwrt.org and firmware.berlin.freifunk.net."
+    echo "  default: <empty>"
+    echo
     echo "FALTER_VARIANT env variable:"
     echo "  chooses the packageset variant. (deprecated)"
     echo "  default: tunneldigger"
