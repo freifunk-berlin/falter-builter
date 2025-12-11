@@ -10,6 +10,7 @@ function usage() {
     echo
     echo "versions and release branches:"
     echo "  snapshot => snapshot"
+    echo "  1.6.x => 1.6.0-snapshot"
     echo "  1.5.x => 1.5.0-snapshot"
     echo "  1.4.x => 1.4.0-snapshot"
     echo "  1.3.x => 1.3.0-snapshot"
@@ -74,6 +75,7 @@ rootdir=$(pwd)
 # map falter's versioning to openwrt's release branches
 orelease="snapshot"
 frelease="snapshot"
+[[ "$fversion" =~ ^1\.6\. ]] && orelease="25.12-SNAPSHOT" && frelease="1.6.0-snapshot"
 [[ "$fversion" =~ ^1\.5\. ]] && orelease="24.10-SNAPSHOT" && frelease="1.5.0-snapshot"
 [[ "$fversion" =~ ^1\.4\. ]] && orelease="23.05.6" && frelease="1.4.0-snapshot"
 [[ "$fversion" =~ ^1\.3\. ]] && orelease="22.03.7" && frelease="1.3.0-snapshot"
@@ -144,7 +146,7 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
 
     # falter package feed, APK for snapshot, OPKG for older branches
     arch="$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')"
-    if [ "x$orelease" = "xsnapshot" ]; then
+    if [ "x$orelease" = "xsnapshot" ] || [ "x$orelease" = "x25.12-SNAPSHOT" ]; then
 
         # install falter signing key, regardless of feed choice
         apkdir="embedded-files/etc/apk"
