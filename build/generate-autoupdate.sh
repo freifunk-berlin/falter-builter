@@ -40,4 +40,4 @@ set -o pipefail
     # .target[][].notunnel
     cat "$outdir/$fversion"/notunnel/*/*/profiles.json | jq -r '.target as $t | .profiles | keys[] as $p | .[$p].images[] | select(.type == "sysupgrade") | {target: {($t): {($p): {notunnel: .sha256}}}}'
 
-) | jq -s 'reduce .[] as $o ({}; . * $o)'
+) | jq -c -s 'reduce .[] as $o ({}; . * $o)'
