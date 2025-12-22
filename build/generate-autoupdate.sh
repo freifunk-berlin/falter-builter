@@ -12,6 +12,12 @@ set -o pipefail
 [ -n "$1" ] && fversion="$1" || usage
 [ -n "$2" ] && outdir="$2" || outdir="./out"
 
+if [[ "$fversion" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
+    urlbase="/stable"
+else
+    urlbase="/unstable"
+fi
+
 (
     echo '{"falter-version": "'"$fversion"'"}'
 
@@ -22,7 +28,7 @@ set -o pipefail
     for f in "$outdir/$fversion"/tunneldigger/*/*/profiles.json; do
         target="$(cat "$f" | jq -r .target)"
         shasum="$(sha256sum "$f" | cut -d' ' -f1)"
-        url="/unstable/$fversion/tunneldigger/$target/profiles.json"
+        url="$urlbase/$fversion/tunneldigger/$target/profiles.json"
         echo '{"profiles": {"'"$target"'": {"tunneldigger": {"url": "'"$url"'", "sha256sum": "'"$shasum"'"}}}}'
     done
 
@@ -30,7 +36,7 @@ set -o pipefail
     for f in "$outdir/$fversion"/notunnel/*/*/profiles.json; do
         target="$(cat "$f" | jq -r .target)"
         shasum="$(sha256sum "$f" | cut -d' ' -f1)"
-        url="/unstable/$fversion/notunnel/$target/profiles.json"
+        url="$urlbase/$fversion/notunnel/$target/profiles.json"
         echo '{"profiles": {"'"$target"'": {"notunnel": {"url": "'"$url"'", "sha256sum": "'"$shasum"'"}}}}'
     done
 
