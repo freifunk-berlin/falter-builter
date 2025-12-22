@@ -35,9 +35,9 @@ set -o pipefail
     done
 
     # .target[][].tunneldigger
-    cat "$outdir/$fversion"/tunneldigger/*/*/profiles.json | jq -r '.target as $t | .profiles | keys[] as $p | .[$p].images[] | select(.type == "sysupgrade") | {target: {($t): {($p): {notunnel: .sha256}}}}'
+    cat "$outdir/$fversion"/tunneldigger/*/*/profiles.json | jq -r '.target as $t | .profiles | keys[] as $p | .[$p].images[] | select(.type == "sysupgrade") | {target: {($t): {($p): {tunneldigger: .sha256}}}}'
 
     # .target[][].notunnel
-    cat "$outdir/$fversion"/notunnel/*/*/profiles.json | jq -r '.target as $t | .profiles | keys[] as $p | .[$p].images[] | select(.type == "sysupgrade") | {target: {($t): {($p): {tunneldigger: .sha256}}}}'
+    cat "$outdir/$fversion"/notunnel/*/*/profiles.json | jq -r '.target as $t | .profiles | keys[] as $p | .[$p].images[] | select(.type == "sysupgrade") | {target: {($t): {($p): {notunnel: .sha256}}}}'
 
 ) | jq -s 'reduce .[] as $o ({}; . * $o)'
