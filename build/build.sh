@@ -47,9 +47,15 @@ function usage() {
     echo "  path to a writable directory where image files will end up."
     echo "  default: ./out"
     echo
-    echo "FALTER_MIRROR env variable:"
-    echo "  sets the base URL of a mirror which serves copies of downloads.openwrt.org and firmware.berlin.freifunk.net."
+    echo "OPENWRT_MIRROR env variable:"
+    echo "  sets the base URL of a mirror which serves a copy of downloads.openwrt.org."
     echo "  default: <empty>"
+    echo "  example: https://mirror.freifunk.dev"
+    echo
+    echo "FALTER_MIRROR env variable:"
+    echo "  sets the base URL of a mirror which serves a copy of firmware.berlin.freifunk.net."
+    echo "  default: <empty>"
+    echo "  example: https://mirror.freifunk.dev"
     echo
     echo "FALTER_VARIANT env variable:"
     echo "  chooses the packageset variant. (deprecated)"
@@ -98,11 +104,14 @@ set -x
 
 frevision=$(git rev-parse --short HEAD)
 
-if [ -z "$FALTER_MIRROR" ]; then
+if [ -z "$OPENWRT_MIRROR" ]; then
     owmirror="https://downloads.openwrt.org"
+else
+    owmirror="$OPENWRT_MIRROR/downloads.openwrt.org"
+fi
+if [ -z "$FALTER_MIRROR" ]; then
     fmirror="https://firmware.berlin.freifunk.net"
 else
-    owmirror="$FALTER_MIRROR/downloads.openwrt.org"
     fmirror="$FALTER_MIRROR/firmware.berlin.freifunk.net"
 fi
 
@@ -171,9 +180,7 @@ EOF1
             echo "$adburl" >"$apkdir/repositories.d/falter.list"
         fi
 
-        if [ -n "$FALTER_MIRROR" ]; then
-            sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories
-        fi
+        sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories
     else
         # install falter signing key, regardless of feed choice
         opkgdir="embedded-files/etc/opkg"
@@ -195,9 +202,7 @@ EOF1
             echo "src/gz falter $feedurl" >>"$opkgdir/customfeeds.conf"
         fi
 
-        if [ -n "$FALTER_MIRROR" ]; then
-            sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories.conf
-        fi
+        sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories.conf
     fi
 
     # /etc/freifunk_release
