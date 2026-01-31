@@ -104,16 +104,10 @@ set -x
 
 frevision=$(git rev-parse --short HEAD)
 
-if [ -z "$OPENWRT_MIRROR" ]; then
-    owmirror="https://downloads.openwrt.org"
-else
-    owmirror="$OPENWRT_MIRROR/downloads.openwrt.org"
-fi
-if [ -z "$FALTER_MIRROR" ]; then
-    fmirror="https://firmware.berlin.freifunk.net"
-else
-    fmirror="$FALTER_MIRROR/firmware.berlin.freifunk.net"
-fi
+owmirror="https://downloads.openwrt.org"
+[ -z "$OPENWRT_MIRROR" ] || owmirror="$OPENWRT_MIRROR"
+fmirror="https://firmware.berlin.freifunk.net"
+[ -z "$FALTER_MIRROR" ] || fmirror="$FALTER_MIRROR"
 
 # our opkg signing key (used by buildbot to sign the package feed)
 fkey="RWRhoHijhAjnECRwgLkBfnA2rgHtgVNmDPJmFfIhGDxbK8vIFxkiZ8iF"
