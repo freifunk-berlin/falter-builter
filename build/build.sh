@@ -163,15 +163,14 @@ EOF1
         cp -av keys/falter.snapshot.pem "$apkdir/keys/"
 
         # custom feed vs. official falter feed
+        adburl="$fmirror/feed/$frelease/packages/$arch/falter/packages.adb"
+        echo "$adburl" >"$apkdir/repositories.d/falter.list"
         if [ -n "$feed" ]; then
             echo "$feed" >>repositories
-            echo "$feed" >>"$apkdir/repositories.d/falter.list"
             cp -av "$feedkey" keys/falter.custom.pem
             cp -av "$feedkey" "$apkdir/keys/falter.custom.pem"
         else
-            adburl="$fmirror/feed/$frelease/packages/$arch/falter/packages.adb"
             echo "$adburl" >>repositories
-            echo "$adburl" >"$apkdir/repositories.d/falter.list"
         fi
 
         sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories
@@ -186,14 +185,13 @@ EOF1
         cp -av "keys/$fkeyfp" "$opkgdir/keys/"
 
         # custom feed vs. official falter feed
+        feedurl="$fmirror/feed/$frelease/packages/$arch/falter"
+        echo "src/gz falter $feedurl" >"$opkgdir/customfeeds.conf"
         if [ -n "$feed" ]; then
             sed -i 's/option check_signature//g' repositories.conf
             echo "src/gz falter $feed" >>repositories.conf
-            echo "src/gz falter $feed" >>"$opkgdir/customfeeds.conf"
         else
-            feedurl="$fmirror/feed/$frelease/packages/$arch/falter"
             echo "src/gz falter $feedurl" >>repositories.conf
-            echo "src/gz falter $feedurl" >>"$opkgdir/customfeeds.conf"
         fi
 
         sed -i 's#https://downloads.openwrt.org#'"$owmirror"'#g' repositories.conf
