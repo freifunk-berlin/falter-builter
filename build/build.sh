@@ -104,7 +104,7 @@ set -x
 
 frevision=$(git rev-parse --short HEAD)
 
-owmirror="https://downloads.openwrt.org"
+owmirror="https://mirror.berlin.freifunk.net/downloads.openwrt.org"
 [ -z "$OPENWRT_MIRROR" ] || owmirror="$OPENWRT_MIRROR"
 fmirror="https://firmware.berlin.freifunk.net"
 [ -z "$FALTER_MIRROR" ] || fmirror="$FALTER_MIRROR"
