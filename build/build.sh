@@ -49,13 +49,13 @@ function usage() {
     echo
     echo "OPENWRT_MIRROR env variable:"
     echo "  sets the base URL of a mirror which serves a copy of downloads.openwrt.org."
-    echo "  default: <empty>"
-    echo "  example: https://mirror.freifunk.dev"
+    echo "  default: https://mirror.berlin.freifunk.net/downloads.openwrt.org"
+    echo "  example: https://downloads.openwrt.org"
     echo
     echo "FALTER_MIRROR env variable:"
     echo "  sets the base URL of a mirror which serves a copy of firmware.berlin.freifunk.net."
-    echo "  default: <empty>"
-    echo "  example: https://mirror.freifunk.dev"
+    echo "  default: https://firmware.berlin.freifunk.net"
+    echo "  example: https://mirror.ff/firmware.berlin.freifunk.net"
     echo
     echo "FALTER_VARIANT env variable:"
     echo "  chooses the packageset variant. (deprecated)"
