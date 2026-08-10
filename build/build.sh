@@ -250,6 +250,7 @@ EOF
 
     # go over all devices and build them
     profilelist=$(make info | sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | sort || true)
+    defaultpkgs="$(make info | grep "Default Packages" | cut -d':' -f2)"
     echo -n "building profiles:"
     echo "$profilelist" | xargs echo -n "  "
     echo
@@ -291,8 +292,15 @@ EOF
                 packages="zram-swap $packages"
             fi
 
-            # qualcomm wave1 devices shouldn't use the CT/CandelaTech wifi driver
             devpkgs="$(make info | grep "$p:" -A 2 | tail -n1 | cut -d':' -f2)"
+
+            # Replace wpad-basic-mbedtls with wpad-mesh-mbedtls when necessary.
+            # Ignore on devices which remove wpad from it's device package list
+            if [[ "$defaultpkgs" =~ wpad-basic-mbedtls ]] && ! [[ "$devpkgs" =~ -wpad-basic-mbedtls ]]; then
+                packages="-wpad-basic-mbedtls wpad-mesh-mbedtls $packages"
+            fi
+
+            # qualcomm wave1 devices shouldn't use the CT/CandelaTech wifi driver
             if [[ "$devpkgs" =~ ath10k-firmware-qca9887 ]]; then
                 packages="kmod-ath10k ath10k-firmware-qca9887 -kmod-ath10k-ct -ath10k-firmware-qca9887-ct -kmod-ath10k-ct-smallbuffers $packages"
             fi
