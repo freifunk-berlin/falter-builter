@@ -1,1 +1,10 @@
 falter-standard
+
+# Save disk space
+-luci-proto-ppp
+-kmod-ppp
+-kmod-pppoe
+-kmod-pppox
+-ppp
+-ppp-mod-pppoe
+
