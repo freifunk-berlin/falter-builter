@@ -1,5 +1,4 @@
 #!/bin/sh
-# shellcheck disable=SC1000-SC9999
 # SPDX-License-Identifier: GPL-2.0-only
 # ----------------------------------------------------------------------
 # extract-vmlinux - Extract uncompressed vmlinux from a kernel image
@@ -11,15 +10,17 @@
 #
 # ----------------------------------------------------------------------
 
+me=${0##*/}
+
 check_vmlinux()
 {
-	# Use readelf to check if it's a valid ELF
-	# TODO: find a better to way to check that it's really vmlinux
-	#       and not just an elf
-	readelf -h $1 > /dev/null 2>&1 || return 1
-
-	cat $1
-	exit 0
+	if file "$1" | grep -q 'Linux kernel.*boot executable' ||
+		readelf -h "$1" > /dev/null 2>&1
+	then
+		cat "$1"
+		echo "$me: Extracted vmlinux using '$2' from offset $3" >&2
+		exit 0
+	fi
 }
 
 try_decompress()
@@ -32,12 +33,11 @@ try_decompress()
 	do
 		pos=${pos%%:*}
 		tail -c+$pos "$img" | $3 > $tmp 2> /dev/null
-		check_vmlinux $tmp
+		check_vmlinux $tmp "$3" $pos
 	done
 }
 
 # Check invocation:
-me=${0##*/}
 img=$1
 if	[ $# -ne 1 -o ! -s "$img" ]
 then
@@ -59,7 +59,7 @@ try_decompress '\002!L\030'   xxx   'lz4 -d'
 try_decompress '(\265/\375'   xxx   unzstd
 
 # Finally check for uncompressed images or objects:
-check_vmlinux $img
+check_vmlinux "$img" cat 0
 
 # Bail out:
 echo "$me: Cannot find vmlinux." >&2
