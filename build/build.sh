@@ -149,7 +149,8 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
 
     # falter package feed, APK for snapshot, OPKG for older branches
     arch="$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')"
-    if [ "x$orelease" = "xsnapshot" ] || [ "x$orelease" = "x25.12-SNAPSHOT" ]; then
+    # if [ "x$orelease" = "xsnapshot" ] || [ "x$orelease" = "x25.12-SNAPSHOT" ]; then
+    if [ "x$orelease" = "xsnapshot" ] || [[ "$orelease" =~ ^25\. ]]; then
 
         # install falter signing key, regardless of feed choice
         apkdir="embedded-files/etc/apk"
