@@ -7,7 +7,7 @@ function usage() {
 
 set -e
 set -o pipefail
-# set -x
+set -x
 
 [ -n "$1" ] && fversion="$1" || usage
 [ -n "$2" ] && outdir="$2" || outdir="./out"
