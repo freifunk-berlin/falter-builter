@@ -281,10 +281,11 @@ EOF
                 smallflash=true
             fi
 
-            if $smallflash; then
-                packages="-falter-berlin-service-registrar -luci-app-falter-service-registrar -luci-i18n-falter-service-registrar-de $packages"
-                packages="-luci-app-statistics -luci-i18n-statistics-de -collectd-mod-rrdtool $packages"
-                packages="-tcpdump-mini -mtr -iperf3 -tmux -vnstat $packages"
+            if ! $smallflash; then
+                packages="falter-bigflash $packages"
+            else
+                # small flash means no package manager
+                packages="-apk-mbedtls -apk-openssl -opkg $packages"
             fi
 
             # devices with <= 32 MB RAM
