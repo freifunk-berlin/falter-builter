@@ -88,6 +88,15 @@ frelease="snapshot"
 [[ "$fversion" =~ ^1\.2\. ]] && orelease="21.02.7" && frelease="1.2.3-snapshot"
 [[ "$fversion" =~ ^testbuildbot ]] && orelease="snapshot" && frelease="testbuildbot"
 
+# get the base version for openwrt. 
+orelease_base="0"
+if [[ "$orelease" =~ ^[0-9] ]]; then
+	orelease_base="${orelease%%.*}"
+else
+	# special case for snapshot. openwrt25 and later needs special handling
+	orelease_base="25"
+fi
+
 [ -n "$2" ] && target="$2" || usage "$frelease" >&2
 [ -n "$4" ] && dest="$4" || dest="./out"
 
@@ -149,8 +158,8 @@ packageset="$(cat "packageset/$(echo "$fversion" | cut -d'-' -f1)/$variant.txt" 
 
     # falter package feed, APK for snapshot, OPKG for older branches
     arch="$(grep CONFIG_TARGET_ARCH_PACKAGES .config | cut -d'=' -f 2 | tr -d '"')"
-    # if [ "x$orelease" = "xsnapshot" ] || [ "x$orelease" = "x25.12-SNAPSHOT" ]; then
-    if [ "x$orelease" = "xsnapshot" ] || [[ "$orelease" =~ ^25\. ]]; then
+    # special handling for apk (orelease_base is set to 25 for "snapshot")
+    if [[ "$orelease_base" -ge 25 ]]; then
 
         # install falter signing key, regardless of feed choice
         apkdir="embedded-files/etc/apk"
@@ -214,7 +223,7 @@ EOF1
  | |_ _ __ ___ _| |_ _   _ _ __ | | __
  |  _| '__/ _ \ |  _| | | | '_ \| |/ /
  | | | | |  __/ | | | |_| | | | |   <
- \_| |_|  \___|_|_|  \__,_|_| |_|_|\_\
+ \_| |_|  \___|_|_|  \__,_|_| |_|_|\_\\
 
  Falter $fversion ($frevision) $target
  https://wiki.freifunk.net/Berlin:Firmware
@@ -315,15 +324,28 @@ EOF
                 packages=" -kmod-dwmac-intel $packages"
             fi
 
-            # build images for this device
-            make image PROFILE="$p" PACKAGES="$packages" DISABLED_SERVICES="olsrd6" FILES=embedded-files EXTRA_IMAGE_NAME="freifunk-falter-$fversion" || true
+            # as of openwrt24, the 8mb devices are too small. drop them
+            if $smallflash && [[ "$orelease_base" -ge 24 ]]; then
+                # drop all small flash devices
+                touch "bin/targets/$target/faillogs/$p.dropped"
+            else
+                #  build images for this device
+                make image PROFILE="$p" PACKAGES="$packages" DISABLED_SERVICES="olsrd6" FILES=embedded-files EXTRA_IMAGE_NAME="freifunk-falter-$fversion" || true
+            fi
         ) \
             |& tee "bin/targets/$target/faillogs/$p.log" >&2
 
-        # if build resulted in image files, we can delete the log
-        cnt="$(find "bin/targets/$target/" -iname "*$p*.bin" -or -iname "*$p*.img" -or -iname "*$p*.gz" -or -iname "*$p*.ubi" -or -iname "*Image*" | wc -l)"
-        if [ "$cnt" -gt 0 ]; then
-            rm -v "bin/targets/$target/faillogs/$p.log"
+        if [[ -f "bin/targets/$target/faillogs/$p.dropped" ]]; then
+            # this build target has been dropped.  this is not a failure
+            # delete the faillog
+            echo "flash size is too small, this target (${p}) has been dropped"
+            rm -v "bin/targets/$target/faillogs/$p.log"  "bin/targets/$target/faillogs/$p.dropped"
+        else
+            # if build resulted in image files, we can delete the log
+            cnt="$(find "bin/targets/$target/" -iname "*$p*.bin" -or -iname "*$p*.img" -or -iname "*$p*.gz" -or -iname "*$p*.ubi" -or -iname "*Image*" | wc -l)"
+            if [ "$cnt" -gt 0 ]; then
+                rm -v "bin/targets/$target/faillogs/$p.log"
+            fi
         fi
     done
 ) \
