@@ -12,7 +12,7 @@ set -x
 [ -n "$1" ] && fversion="$1" || usage
 [ -n "$2" ] && outdir="$2" || outdir="./out"
 
-if [[ "$fversion" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
+if [[ "$fversion" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     urlbase="/stable"
 else
     urlbase="/unstable"

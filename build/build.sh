@@ -88,13 +88,13 @@ frelease="snapshot"
 [[ "$fversion" =~ ^1\.2\. ]] && orelease="21.02.7" && frelease="1.2.3-snapshot"
 [[ "$fversion" =~ ^testbuildbot ]] && orelease="snapshot" && frelease="testbuildbot"
 
-# get the base version for openwrt. 
+# get the base version for openwrt.
 orelease_base="0"
 if [[ "$orelease" =~ ^[0-9] ]]; then
-	orelease_base="${orelease%%.*}"
+    orelease_base="${orelease%%.*}"
 else
-	# special case for snapshot. openwrt25 and later needs special handling
-	orelease_base="25"
+    # special case for snapshot. openwrt25 and later needs special handling
+    orelease_base="25"
 fi
 
 [ -n "$2" ] && target="$2" || usage "$frelease" >&2
@@ -339,7 +339,7 @@ EOF
             # this build target has been dropped.  this is not a failure
             # delete the faillog
             echo "flash size is too small, this target (${p}) has been dropped"
-            rm -v "bin/targets/$target/faillogs/$p.log"  "bin/targets/$target/faillogs/$p.dropped"
+            rm -v "bin/targets/$target/faillogs/$p.log" "bin/targets/$target/faillogs/$p.dropped"
         else
             # if build resulted in image files, we can delete the log
             cnt="$(find "bin/targets/$target/" -iname "*$p*.bin" -or -iname "*$p*.img" -or -iname "*$p*.gz" -or -iname "*$p*.ubi" -or -iname "*Image*" | wc -l)"
