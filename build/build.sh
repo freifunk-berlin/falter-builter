@@ -256,7 +256,7 @@ EOF
     # luci favicon
     d="embedded-files/www/luci-static/bootstrap/"
     mkdir -p "$d"
-    cp "$rootdir/store/favicon.png" "$d/"
+    cp "$rootdir/store/favicon.png" "$d/logo.svg"
 
     # go over all devices and build them
     profilelist=$(make info | sed -n 's/\(^[a-zA-Z0-9_-]*\)\:$/\1/p' | sort || true)
