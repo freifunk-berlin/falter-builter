@@ -286,7 +286,7 @@ EOF
 
             # table of hardware lists flash chip capacity, not usable image space.
             # some 16 MB devices with A/B partition setup need to be forced to 8 MB.
-            if [[ "$p" =~ ubnt_unifiac|ubnt_unifi-ap|ubnt_usw-flex ]]; then
+            if [[ "$p" =~ ubnt_unifi-ap$|ubnt_unifi-ap-lr$|ubnt_usw-flex ]]; then
                 smallflash=true
             fi
 
