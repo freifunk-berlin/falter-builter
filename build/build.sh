@@ -81,7 +81,7 @@ rootdir=$(pwd)
 # map falter's versioning to openwrt's release branches
 orelease="snapshot"
 frelease="snapshot"
-[[ "$fversion" =~ ^1\.6\. ]] && orelease="25.12.5" && frelease="1.6.0-snapshot"
+[[ "$fversion" =~ ^1\.6\. ]] && orelease="25.12.6" && frelease="1.6.0-snapshot"
 [[ "$fversion" =~ ^1\.5\. ]] && orelease="24.10.8" && frelease="1.5.0-snapshot"
 [[ "$fversion" =~ ^1\.4\. ]] && orelease="23.05.6" && frelease="1.4.0-snapshot"
 [[ "$fversion" =~ ^1\.3\. ]] && orelease="22.03.7" && frelease="1.3.0-snapshot"
