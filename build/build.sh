@@ -271,6 +271,11 @@ EOF
             continue
         fi
 
+        # skip if all selected and we encounter "Default", which we don't need
+        if [ "x$profile" == "xall" ] && [ "xDefault" == "x$p" ]; then
+            continue
+        fi
+
         # subshell because we save the device build log if it fails
         (
             # customize image based on device quirks (see below)
