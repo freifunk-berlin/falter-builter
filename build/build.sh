@@ -330,7 +330,7 @@ EOF
                 touch "bin/targets/$target/faillogs/$p.dropped"
             else
                 #  build images for this device
-                make image PROFILE="$p" PACKAGES="$packages" DISABLED_SERVICES="prometheus-push olsrd6" FILES=embedded-files EXTRA_IMAGE_NAME="freifunk-falter-$fversion" || true
+                make image PROFILE="$p" PACKAGES="$packages" DISABLED_SERVICES="olsrd6" FILES=embedded-files EXTRA_IMAGE_NAME="freifunk-falter-$fversion" || true
             fi
         ) \
             |& tee "bin/targets/$target/faillogs/$p.log" >&2
